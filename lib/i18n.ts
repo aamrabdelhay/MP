@@ -32,7 +32,6 @@ type Messages = {
   networkError: string;
   successTitle: string;
   successDescription: string;
-  loading: string;
   resetForm: string;
   statusValid: string;
   statusInvalid: string;
@@ -47,6 +46,7 @@ type Messages = {
     login: string;
     loggingIn: string;
     loginError: string;
+    loginServiceUnavailable: string;
     tooManyAttempts: string;
     logout: string;
     newRequests: string;
@@ -130,7 +130,6 @@ const ar: Messages = {
   networkError: "تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت ثم أعد المحاولة.",
   successTitle: "تم استلام طلبك بنجاح",
   successDescription: "شكرًا لاهتمامك بجامعة العاصمة. سنراجع بياناتك ونتواصل معك عند الحاجة.",
-  loading: "جارٍ تجهيز بوابة التسجيل",
   resetForm: "تقديم طلب جديد",
   statusValid: "مكتمل",
   statusInvalid: "مطلوب أو غير صحيح",
@@ -145,6 +144,7 @@ const ar: Messages = {
     login: "دخول آمن",
     loggingIn: "جارٍ التحقق...",
     loginError: "كلمة المرور غير صحيحة. حاول مرة أخرى.",
+    loginServiceUnavailable: "خدمة تسجيل الدخول غير متاحة حاليًا. يرجى مراجعة إعداد قاعدة البيانات وترحيل الجداول.",
     tooManyAttempts: "تم إيقاف المحاولات مؤقتًا لكثرة المحاولات الخاطئة. حاول لاحقًا.",
     logout: "تسجيل الخروج",
     newRequests: "الطلبات الجديدة",
@@ -161,7 +161,7 @@ const ar: Messages = {
     delete: "حذف الطلب",
     deleted: "تم حذف الطلب بنجاح.",
     confirmDelete: "هل أنت متأكد من حذف هذا الطلب نهائيًا؟ لا يمكن التراجع عن هذا الإجراء.",
-    copied: "تم النسخ ✓",
+    copied: "تم النسخ",
     copyFailed: "تعذّر النسخ. حاول تحديد النص ونسخه يدويًا.",
     requestsLoadError: "تعذّر تحميل الطلبات. تحقق من الاتصال وحاول مرة أخرى.",
     statusUpdateError: "تعذّر تحديث حالة الطلب.",
@@ -238,7 +238,6 @@ const en: Messages = {
   networkError: "Could not reach the server. Check your internet connection and try again.",
   successTitle: "Application received",
   successDescription: "Thank you for choosing Capital University. We will review your details and contact you if needed.",
-  loading: "Preparing the registration portal",
   resetForm: "Submit another application",
   statusValid: "Complete",
   statusInvalid: "Required or invalid",
@@ -253,6 +252,7 @@ const en: Messages = {
     login: "Sign in securely",
     loggingIn: "Verifying...",
     loginError: "The password is incorrect. Please try again.",
+    loginServiceUnavailable: "The sign-in service is unavailable. Check the database configuration and migrations.",
     tooManyAttempts: "Too many incorrect attempts. Sign-in is temporarily paused; try again later.",
     logout: "Sign out",
     newRequests: "New requests",
@@ -269,7 +269,7 @@ const en: Messages = {
     delete: "Delete request",
     deleted: "Request deleted.",
     confirmDelete: "Are you sure you want to permanently delete this application? This cannot be undone.",
-    copied: "Copied ✓",
+    copied: "Copied",
     copyFailed: "Could not copy. Please select and copy the text manually.",
     requestsLoadError: "Could not load applications. Check your connection and try again.",
     statusUpdateError: "Could not update the application status.",
