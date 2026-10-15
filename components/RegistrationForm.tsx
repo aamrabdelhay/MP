@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, type ChangeEvent, type FormEvent } from "react";
-import { ArrowLeft, CheckCircle2, CircleAlert, LoaderCircle, LockKeyhole, Send } from "lucide-react";
+import { ArrowLeft, CheckCircle2, CircleAlert, LoaderCircle, Send } from "lucide-react";
 import { useLanguage } from "@/app/providers";
 import { Field } from "@/components/Field";
 import { DotIndicator } from "@/components/DotIndicator";
@@ -29,11 +29,12 @@ const EMPTY_FORM: RegistrationFormDraft = {
 };
 
 export function RegistrationForm() {
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const [form, setForm] = useState<RegistrationFormDraft>({ ...EMPTY_FORM });
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<FormMessage>(null);
   const [saved, setSaved] = useState(false);
+  const [nationalIdEntryError, setNationalIdEntryError] = useState("");
 
   const validity = useMemo(() => {
     const result = {} as Record<RegistrationField, ReturnType<typeof getFieldValidity>>;
@@ -45,7 +46,7 @@ export function RegistrationForm() {
 
   const dateFromId = getNationalIdBirthDate(form.nationalId);
   const dateMismatch = Boolean(dateFromId && form.birthDate && dateFromId !== form.birthDate);
-  const formIsValid = isRegistrationValid(form);
+  const formIsValid = isRegistrationValid(form) && !nationalIdEntryError;
 
   function updateField(field: RegistrationField, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -57,6 +58,26 @@ export function RegistrationForm() {
     return (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
       updateField(field, event.currentTarget.value);
     };
+  }
+
+  function handleNationalIdChange(event: ChangeEvent<HTMLInputElement>) {
+    const value = event.currentTarget.value;
+    if (/[٠-٩۰-۹]/.test(value) || /[^0-9]/.test(value)) {
+      setNationalIdEntryError(t.nationalIdEnglishOnly);
+      setMessage(null);
+      setSaved(false);
+      return;
+    }
+
+    setNationalIdEntryError("");
+    setMessage(null);
+    setSaved(false);
+    setForm((current) => {
+      const next = { ...current, nationalId: value };
+      const encodedBirthDate = getNationalIdBirthDate(value);
+      if (encodedBirthDate) next.birthDate = encodedBirthDate;
+      return next;
+    });
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -114,9 +135,8 @@ export function RegistrationForm() {
         <div className="registration-heading">
           <div>
             <h2 id="registration-title">{t.formTitle}</h2>
-            <p>{t.formDescription}</p>
+            {t.formDescription ? <p>{t.formDescription}</p> : null}
           </div>
-          <span className="required-note">{t.requiredNote}</span>
         </div>
 
         <form className="registration-form" onSubmit={handleSubmit} noValidate>
@@ -175,8 +195,6 @@ export function RegistrationForm() {
               label={t.fields.department}
               validity={validity.department}
               {...validityLabels}
-              optional
-              optionalLabel={t.optional}
               hint={t.help.department}
             >
               <input
@@ -225,7 +243,8 @@ export function RegistrationForm() {
               label={t.fields.nationalId}
               validity={validity.nationalId}
               {...validityLabels}
-              hint={t.help.nationalId}
+              hint={nationalIdEntryError ? undefined : t.help.nationalId}
+              errorHint={nationalIdEntryError || undefined}
             >
               <input
                 className="field-control field-control--ltr"
@@ -238,11 +257,11 @@ export function RegistrationForm() {
                 dir="ltr"
                 placeholder={t.placeholders.nationalId}
                 value={form.nationalId}
-                onChange={handleTextChange("nationalId")}
+                onChange={handleNationalIdChange}
                 maxLength={14}
                 required
                 aria-required="true"
-                aria-invalid={validity.nationalId === "invalid" && Boolean(form.nationalId.trim())}
+                aria-invalid={Boolean(nationalIdEntryError) || (validity.nationalId === "invalid" && Boolean(form.nationalId.trim()))}
               />
             </Field>
 
@@ -285,6 +304,7 @@ export function RegistrationForm() {
                 aria-describedby="birthDate-hint"
                 name="birthDate"
                 type="date"
+                autoComplete="bday"
                 dir="ltr"
                 max={todayISODate()}
                 value={form.birthDate}
@@ -302,7 +322,7 @@ export function RegistrationForm() {
                   <span>{t.fields.universityType}</span>
                 </span>
               </legend>
-              <p className="choice-description" id="universityType-hint">{t.selectUniversity}</p>
+              {t.selectUniversity ? <p className="choice-description" id="universityType-hint">{t.selectUniversity}</p> : null}
               <div className="choice-options">
                 <label className={`choice-card${form.universityType === "government" ? " choice-card--selected" : ""}`}>
                   <input
@@ -331,10 +351,6 @@ export function RegistrationForm() {
           </div>
 
           <div className="form-bottom">
-            <p className="form-privacy">
-              <LockKeyhole aria-hidden="true" size={15} />
-              <span>{language === "ar" ? "تُستخدم بياناتك لغرض مراجعة طلب التسجيل فقط، ويتم حفظها في قاعدة بيانات آمنة." : "Your information is used only to review your application and is stored in a protected database."}</span>
-            </p>
             <button className="primary-button" type="submit" disabled={!formIsValid || submitting}>
               {submitting ? (
                 <LoaderCircle aria-hidden="true" size={17} className="button-spinner" />

@@ -16,7 +16,6 @@ type Messages = {
   heroPointThree: string;
   formTitle: string;
   formDescription: string;
-  requiredNote: string;
   fields: Record<RegistrationField, string>;
   placeholders: Record<"fullName" | "college" | "department" | "phone" | "nationalId" | "address", string>;
   help: Record<"fullName" | "phone" | "nationalId" | "address" | "birthDate" | "department", string>;
@@ -37,6 +36,7 @@ type Messages = {
   statusInvalid: string;
   statusOptional: string;
   mismatchBirthDate: string;
+  nationalIdEnglishOnly: string;
   admin: {
     title: string;
     description: string;
@@ -82,16 +82,15 @@ const ar: Messages = {
   siteName: "جامعة العاصمة",
   englishName: "Capital University",
   headerNote: "بوابة التسجيل الإلكتروني",
-  heroEyebrow: "مستقبلك يبدأ من هنا",
-  heroTitle: "خطوتك الأولى نحو",
-  heroAccent: "مستقبل أكاديمي أوسع",
-  heroDescription: "سجّل بياناتك الآن، وسيقوم فريق الجامعة بمراجعة طلبك والتواصل معك لاستكمال الإجراءات.",
-  heroPointOne: "تقديم إلكتروني آمن",
-  heroPointTwo: "متابعة مباشرة للطلبات",
-  heroPointThree: "بياناتك محفوظة بسرية",
+  heroEyebrow: "",
+  heroTitle: "بوابة الزيارات العسكرية",
+  heroAccent: "",
+  heroDescription: "",
+  heroPointOne: "",
+  heroPointTwo: "",
+  heroPointThree: "",
   formTitle: "استمارة التسجيل",
-  formDescription: "أدخل البيانات بدقة كما هي في مستنداتك الرسمية.",
-  requiredNote: "جميع الحقول مطلوبة ما عدا القسم",
+  formDescription: "",
   fields: {
     fullName: "الاسم رباعي",
     college: "الكلية",
@@ -111,15 +110,15 @@ const ar: Messages = {
     address: "المحافظة، المدينة، الشارع، ورقم العقار",
   },
   help: {
-    fullName: "أربعة أجزاء على الأقل، بحروف عربية أو إنجليزية فقط.",
-    phone: "رقم مصري يبدأ بـ 010 أو 011 أو 012 أو 015.",
-    nationalId: "14 رقمًا صحيحًا، ويمكن إدخاله بالأرقام العربية.",
-    address: "اكتب عنوانًا تفصيليًا من 10 أحرف على الأقل.",
+    fullName: "",
+    phone: "",
+    nationalId: "",
+    address: "",
     birthDate: "يجب أن يطابق تاريخ الميلاد المسجل في الرقم القومي.",
-    department: "هذا الحقل اختياري.",
+    department: "",
   },
   optional: "اختياري",
-  selectUniversity: "اختر نوع الجامعة المناسب",
+  selectUniversity: "",
   governmentUniversity: "جامعة العاصمة الحكومية",
   privateUniversity: "جامعة العاصمة الأهلية",
   submit: "تسليم",
@@ -135,6 +134,7 @@ const ar: Messages = {
   statusInvalid: "مطلوب أو غير صحيح",
   statusOptional: "اختياري",
   mismatchBirthDate: "تاريخ الميلاد لا يطابق التاريخ المسجل في الرقم القومي.",
+  nationalIdEnglishOnly: "اكتب الرقم القومي بالأرقام الإنجليزية فقط.",
   admin: {
     title: "لوحة إدارة الطلبات",
     description: "إدارة طلبات التسجيل الواردة إلى جامعة العاصمة.",
@@ -190,16 +190,15 @@ const en: Messages = {
   siteName: "Capital University",
   englishName: "Capital University",
   headerNote: "Online registration portal",
-  heroEyebrow: "Your future starts here",
-  heroTitle: "Take your first step toward",
-  heroAccent: "a brighter academic future",
-  heroDescription: "Submit your details and the university team will review your application and contact you about the next steps.",
-  heroPointOne: "Secure online application",
-  heroPointTwo: "Requests tracked in one place",
-  heroPointThree: "Your information stays private",
+  heroEyebrow: "",
+  heroTitle: "Military Visits Portal",
+  heroAccent: "",
+  heroDescription: "",
+  heroPointOne: "",
+  heroPointTwo: "",
+  heroPointThree: "",
   formTitle: "Registration form",
-  formDescription: "Enter your details carefully, exactly as they appear on your official documents.",
-  requiredNote: "All fields are required except department",
+  formDescription: "",
   fields: {
     fullName: "Full name (four parts)",
     college: "College",
@@ -219,15 +218,15 @@ const en: Messages = {
     address: "Governorate, city, street and building number",
   },
   help: {
-    fullName: "At least four parts, using Arabic or English letters only.",
-    phone: "Egyptian mobile number starting with 010, 011, 012 or 015.",
-    nationalId: "A valid 14-digit Egyptian ID. Arabic numerals are accepted too.",
-    address: "Enter a detailed address of at least 10 characters.",
+    fullName: "",
+    phone: "",
+    nationalId: "",
+    address: "",
     birthDate: "Must match the date of birth encoded in your national ID.",
-    department: "This field is optional.",
+    department: "",
   },
   optional: "Optional",
-  selectUniversity: "Choose the university type that applies",
+  selectUniversity: "",
   governmentUniversity: "Capital University — Government",
   privateUniversity: "Capital University — Private / Ahleya",
   submit: "Submit application",
@@ -243,6 +242,7 @@ const en: Messages = {
   statusInvalid: "Required or invalid",
   statusOptional: "Optional",
   mismatchBirthDate: "This date does not match the date encoded in the national ID.",
+  nationalIdEnglishOnly: "Enter the national ID using English digits only.",
   admin: {
     title: "Applications dashboard",
     description: "Manage registration applications submitted to Capital University.",

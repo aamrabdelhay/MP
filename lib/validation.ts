@@ -65,7 +65,7 @@ const VALID_GOVERNORATE_CODES = new Set([
 
 /** Returns the birth date encoded in a structurally valid Egyptian ID, or null. */
 export function getNationalIdBirthDate(value: string): string | null {
-  const id = normalizeDigits(value);
+  const id = value;
   if (!/^\d{14}$/.test(id) || (id[0] !== "2" && id[0] !== "3")) return null;
 
   const yearInCentury = Number(id.slice(1, 3));
@@ -80,8 +80,9 @@ export function getNationalIdBirthDate(value: string): string | null {
 }
 
 function nationalIdIssue(value: string): string | null {
-  const id = normalizeDigits(value);
-  if (!/^\d{14}$/.test(id)) return "يجب أن يتكون الرقم القومي من 14 رقمًا.";
+  const id = value;
+  if (/[٠-٩۰-۹]/.test(id)) return "اكتب الرقم القومي بالأرقام الإنجليزية فقط.";
+  if (!/^[0-9]{14}$/.test(id)) return "يجب أن يتكون الرقم القومي من 14 رقمًا إنجليزيًا.";
   if (id[0] !== "2" && id[0] !== "3") return "يجب أن يبدأ الرقم القومي بالرقم 2 أو 3.";
 
   const yearInCentury = Number(id.slice(1, 3));
@@ -101,7 +102,7 @@ const fullNameSchema = z
   .superRefine((value, context) => {
     const words = value.split(/\s+/).filter(Boolean);
     if (words.length < 4) {
-      context.addIssue({ code: z.ZodIssueCode.custom, message: "اكتب الاسم رباعيًّا (أربعة أجزاء على الأقل)." });
+      context.addIssue({ code: z.ZodIssueCode.custom, message: "اكتب الاسم رباعيًّا كما هو في مستندك الرسمي." });
       return;
     }
 
@@ -132,7 +133,7 @@ const phoneSchema = z.preprocess(
 );
 
 const nationalIdSchema = z.preprocess(
-  (value) => (typeof value === "string" ? normalizeDigits(value).trim() : value),
+  (value) => (typeof value === "string" ? value.trim() : value),
   z.string().superRefine((value, context) => {
     const issue = nationalIdIssue(value);
     if (issue) context.addIssue({ code: z.ZodIssueCode.custom, message: issue });
