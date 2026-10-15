@@ -138,6 +138,8 @@ export function AdminDashboard() {
         setLoginError(t.admin.loginError);
       } else if (response.status === 429 || result.code === "RATE_LIMITED") {
         setLoginError(t.admin.tooManyAttempts);
+      } else if (response.status === 503 || result.code === "LOGIN_UNAVAILABLE") {
+        setLoginError(t.admin.loginServiceUnavailable);
       } else if (!response.ok) {
         setLoginError(t.admin.networkError);
       } else {
