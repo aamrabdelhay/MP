@@ -138,6 +138,8 @@ export function AdminDashboard() {
         setLoginError(t.admin.loginError);
       } else if (response.status === 429 || result.code === "RATE_LIMITED") {
         setLoginError(t.admin.tooManyAttempts);
+      } else if (response.status === 503 || result.code === "LOGIN_UNAVAILABLE") {
+        setLoginError(t.admin.loginServiceUnavailable);
       } else if (!response.ok) {
         setLoginError(t.admin.networkError);
       } else {
@@ -307,7 +309,22 @@ export function AdminDashboard() {
               <span>{loggingIn ? t.admin.loggingIn : t.admin.login}</span>
             </button>
           </form>
-          <Link className="back-link" href="/">
+          <Link
+            className="back-link admin-login-back-button"
+            href="/"
+            style={{
+              display: "inline-flex",
+              justifyContent: "center",
+              width: "100%",
+              minHeight: 44,
+              marginTop: 14,
+              padding: "10px 14px",
+              border: "1px solid rgba(24, 45, 74, 0.2)",
+              borderRadius: 12,
+              background: "rgba(255, 255, 255, 0.72)",
+              textDecoration: "none",
+            }}
+          >
             <span aria-hidden="true">{language === "ar" ? "←" : "→"}</span>
             {t.admin.backToSite}
           </Link>

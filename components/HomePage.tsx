@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, GraduationCap, ShieldCheck, Sparkles } from "lucide-react";
+import { GraduationCap, Sparkles } from "lucide-react";
 import { useLanguage } from "@/app/providers";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LoadingScreen } from "@/components/LoadingScreen";
@@ -32,17 +32,19 @@ export function HomePage() {
 
         <section className="hero-section" aria-labelledby="hero-title">
           <div className="hero-copy">
-            <span className="eyebrow">{t.heroEyebrow}</span>
+            {t.heroEyebrow ? <span className="eyebrow">{t.heroEyebrow}</span> : null}
             <h1 className="hero-title" id="hero-title">
               {t.heroTitle}
-              <span className="hero-title-accent">{t.heroAccent}</span>
+              {t.heroAccent ? <span className="hero-title-accent">{t.heroAccent}</span> : null}
             </h1>
-            <p className="hero-description">{t.heroDescription}</p>
-            <ul className="hero-points">
-              <li><Check aria-hidden="true" size={15} />{t.heroPointOne}</li>
-              <li><Check aria-hidden="true" size={15} />{t.heroPointTwo}</li>
-              <li><ShieldCheck aria-hidden="true" size={15} />{t.heroPointThree}</li>
-            </ul>
+            {t.heroDescription ? <p className="hero-description">{t.heroDescription}</p> : null}
+            {t.heroPointOne || t.heroPointTwo || t.heroPointThree ? (
+              <ul className="hero-points">
+                {t.heroPointOne ? <li>{t.heroPointOne}</li> : null}
+                {t.heroPointTwo ? <li>{t.heroPointTwo}</li> : null}
+                {t.heroPointThree ? <li>{t.heroPointThree}</li> : null}
+              </ul>
+            ) : null}
           </div>
 
           <div className="hero-art" aria-hidden="true">
@@ -57,7 +59,6 @@ export function HomePage() {
                 <p className="seal-center-en">CAPITAL UNIVERSITY</p>
               </div>
               <div className="seal-stars seal-stars-bottom"><span /><span /><span /></div>
-              <span className="seal-caption">KNOWLEDGE · AMBITION · FUTURE</span>
             </div>
           </div>
         </section>
