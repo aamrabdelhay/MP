@@ -1,13 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLanguage } from "@/app/providers";
 
 type LoadingPhase = "visible" | "leaving" | "hidden";
 
 export function LoadingScreen() {
   const [phase, setPhase] = useState<LoadingPhase>("visible");
-  const { t } = useLanguage();
 
   useEffect(() => {
     const leaveTimer = window.setTimeout(() => setPhase("leaving"), 1850);
@@ -38,7 +36,6 @@ export function LoadingScreen() {
           <strong>جامعة العاصمة</strong>
           <span>Capital University</span>
         </div>
-        <p className="loading-caption">{t.loading}</p>
       </div>
     </div>
   );
