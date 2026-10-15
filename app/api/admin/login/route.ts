@@ -106,4 +106,3 @@ export async function POST(request: NextRequest) {
     return jsonNoStore({ code: "LOGIN_UNAVAILABLE" }, { status: 503 });
   }
 }
-}
