@@ -53,7 +53,8 @@ export function AttendancePage() {
    const rows=XLSX.utils.sheet_to_json<unknown[]>(sheet,{header:1,blankrows:false,defval:"",raw:false});
    if(!rows.length)throw new Error("الملف لا يحتوي على أسماء.");
    const first=rows[0].map(v=>String(v??"").trim());
-   const normalizeHeader=(value:string)=>value.toLocaleLowerCase("ar").replace(/[\\s_ـ-]+/g," ").replace(/[.:：]/g,"").trim();\n   const headerIndex=first.findIndex(v=>/^(الاسم|اسم الطالب|اسم الطالبة|اسم الطالب\/ة|اسم الطالب بالكامل|الاسم بالكامل|اسم المتدرب|name|full name|student name)$/i.test(normalizeHeader(v)));
+   const normalizeHeader=(value:string)=>value.toLocaleLowerCase("ar").trim().replaceAll("_"," ").replaceAll("ـ"," ");
+   const headerIndex=first.findIndex(v=>/^(الاسم|اسم الطالب|اسم الطالبة|اسم الطالب\/ة|اسم الطالب بالكامل|الاسم بالكامل|اسم المتدرب|name|full name|student name)$/i.test(normalizeHeader(v)));
    const phoneIndex=first.findIndex(v=>/(phone|mobile|telephone|tel|رقم.*(هاتف|تليفون|موبايل|جوال)|هاتف|تليفون|موبايل|جوال)/i.test(normalizeHeader(v)));
    const column=headerIndex>=0?headerIndex:Math.max(0,first.findIndex(v=>String(v).trim()!==""));
    const start=headerIndex>=0?1:0;
