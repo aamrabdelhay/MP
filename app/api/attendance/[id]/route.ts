@@ -32,7 +32,7 @@ export async function POST(request:NextRequest,context:{params:Promise<{id:strin
  const parsed=z.object({name:z.string().trim().min(1).max(180),phone:z.string().trim().max(40).optional()}).safeParse(body);
  if(!parsed.success)return jsonNoStore({error:"اكتب اسمًا صحيحًا."},{status:400});
  try {
-  const result=await getDb().execute(sql`INSERT INTO attendance_entries(visit_id,full_name,position) VALUES(${id}::uuid,${parsed.data.name.replace(/\s+/g," ").trim()},COALESCE((SELECT MAX(position)+1 FROM attendance_entries WHERE visit_id=${id}::uuid),0)) RETURNING id,full_name AS name,status,position`);
+  const result=await getDb().execute(sql`INSERT INTO attendance_entries(visit_id,full_name,phone_number,position) VALUES(${id}::uuid,${parsed.data.name.replace(/\s+/g," ").trim()},${parsed.data.phone??null},COALESCE((SELECT MAX(position)+1 FROM attendance_entries WHERE visit_id=${id}::uuid),0)) RETURNING id,full_name AS name,phone_number AS phone,status,position`);
   if(!result.length)return jsonNoStore({error:"تعذّر إضافة الاسم."},{status:500});
   return jsonNoStore({entry:result[0]},{status:201});
  }catch(error){console.error("Attendance add name failed",error);return jsonNoStore({error:"تعذّر إضافة الاسم. تأكد من وجود الكشف."},{status:500});}
