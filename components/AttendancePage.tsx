@@ -79,7 +79,8 @@ export function AttendancePage() {
   try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:entry.id,status})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر حفظ الحالة");await refreshVisits();}
   catch(error){if(!navigator.onLine){setMessage("تم حفظ التغيير على هذا الجهاز دون اتصال. سيظل محليًا حتى تعود للشبكة.");return;}setSelected(previous);const text=error instanceof Error?error.message:"تعذّر حفظ الحالة";setMessage(text);}
  }
- async function copyCounts(){if(!selected)return;const text=`الحضور: ${counts.present}\nالغياب: ${counts.absent}\nفي الطريق: ${counts.moving}\nالجوكر: ${counts.joker}\nلم يُحدد: ${counts.unmarked}`;try{await navigator.clipboard.writeText(text);setMessage("تم نسخ ملخص الحالات.");}catch{setMessage(text);}}\n async function deleteVisit(visit:Visit){
+ async function copyCounts(){if(!selected)return;const text=`الحضور: ${counts.present}\nالغياب: ${counts.absent}\nفي الطريق: ${counts.moving}\nالجوكر: ${counts.joker}\nلم يُحدد: ${counts.unmarked}`;try{await navigator.clipboard.writeText(text);setMessage("تم نسخ ملخص الحالات.");}catch{setMessage(text);}}
+ async function deleteVisit(visit:Visit){
   if(!window.confirm(`هل أنت متأكد من حذف كشف "${visit.title}"؟ سيتم حذف جميع الأسماء وحالات الحضور التابعة له نهائيًا.`))return;
   if(visit.id.startsWith("local-")){setVisits(current=>current.filter(item=>item.id!==visit.id));if(selected?.visit.id===visit.id)setSelected(null);setMessage("تم حذف الكشف المحلي.");return;}
   setBusy(true);setMessage("");
