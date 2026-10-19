@@ -63,7 +63,7 @@ export function HomePage() {
           </div>
         </section>
 
-        <div style={{ display: "flex", justifyContent: "center", margin: "0 auto 24px" }}><a href="/attendance" style={{ display: "inline-flex", alignItems: "center", gap: 9, borderRadius: 11, background: "#e8872c", color: "#fff", textDecoration: "none", fontWeight: 800, padding: "13px 21px", boxShadow: "0 6px 18px #e8872c33" }}>كشف الحضور <ArrowLeft size={18} aria-hidden="true" /></a></div>
+        <div style={{ display: "flex", justifyContent: "center", margin: "0 auto 24px" }}><a href="/admin" style={{ display: "inline-flex", alignItems: "center", gap: 9, borderRadius: 11, background: "#e8872c", color: "#fff", textDecoration: "none", fontWeight: 800, padding: "13px 21px", boxShadow: "0 6px 18px #e8872c33" }}>الإدارة وكشف الحضور <ArrowLeft size={18} aria-hidden="true" /></a></div>
         <RegistrationForm />
       </div>
       <LoadingScreen />
