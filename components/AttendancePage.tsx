@@ -27,19 +27,19 @@ export function AttendancePage() {
   const online=()=>setIsOnline(true),offline=()=>setIsOnline(false);
   window.addEventListener("online",online);window.addEventListener("offline",offline);
   if("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(()=>{});
-  try{const cached=localStorage.getItem("attendance-offline-cache");if(cached){const data=JSON.parse(cached);if(!navigator.onLine){setVisits(data.visits||[]);setSelected(data.selected||null);setLoading(false);}}}catch{}
+  try{const cached=localStorage.getItem("attendance-offline-cache");if(cached){const data=JSON.parse(cached);setVisits(data.visits||[]);if(data.selected?.visit?.id?.startsWith("local-"))setSelected(data.selected);if(!navigator.onLine)setLoading(false);}}catch{}
   return()=>{window.removeEventListener("online",online);window.removeEventListener("offline",offline);};
  },[]);
  useEffect(()=>{try{localStorage.setItem("attendance-offline-cache",JSON.stringify({visits,selected}));}catch{}},[visits,selected]);
 
  const refreshVisits=useCallback(async()=>{
-  try { const response=await fetch("/api/attendance",{cache:"no-store"}); const data=await response.json(); if(!response.ok) throw new Error(data.error||"تعذّر تحميل الكشوف"); setVisits(data.visits||[]); }
+  try { const response=await fetch("/api/attendance",{cache:"no-store"}); const data=await response.json(); if(!response.ok) throw new Error(data.error||"تعذّر تحميل الكشوف"); const localVisits=(()=>{try{return (JSON.parse(localStorage.getItem("attendance-offline-cache")||"{}").visits||[]).filter((v:Visit)=>v.id.startsWith("local-"));}catch{return [];}})();setVisits([...(data.visits||[]),...localVisits]); }
   catch(error){try{const cached=localStorage.getItem("attendance-offline-cache");if(cached){const data=JSON.parse(cached);setVisits(data.visits||[]);if(!navigator.onLine)setMessage("أنت تعمل دون اتصال. يتم عرض آخر نسخة محفوظة على هذا الجهاز.");else setMessage(error instanceof Error?error.message:"حدث خطأ غير متوقع");}else setMessage(error instanceof Error?error.message:"حدث خطأ غير متوقع");}catch{setMessage("تعذّر تحميل الكشوف المحفوظة.");}}
   finally{setLoading(false);}
  },[]);
  const loadVisit=useCallback(async(id:string)=>{
   try {const response=await fetch("/api/attendance/"+id,{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر فتح الكشف");setSelected(data);setMessage("");}
-  catch(error){try{const cached=localStorage.getItem("attendance-offline-cache");const data=cached?JSON.parse(cached):null;const local=data?.selected;if(!navigator.onLine&&local&&local.visit?.id===id){setSelected(local);setMessage("أنت تعمل دون اتصال. التعديلات محفوظة على هذا الجهاز فقط.");}else{setMessage(error instanceof Error?error.message:"تعذّر فتح الكشف");setSelected(null);}}catch{setMessage("تعذّر فتح الكشف");setSelected(null);}}
+  catch(error){try{const cached=localStorage.getItem("attendance-offline-cache");const data=cached?JSON.parse(cached):null;const local=data?.selected;if(local&&local.visit?.id===id&&(id.startsWith("local-")||!navigator.onLine)){setSelected(local);setMessage("أنت تعمل دون اتصال. التعديلات محفوظة على هذا الجهاز فقط.");}else{setMessage(error instanceof Error?error.message:"تعذّر فتح الكشف");setSelected(null);}}catch{setMessage("تعذّر فتح الكشف");setSelected(null);}}
  },[]);
  useEffect(()=>{void refreshVisits();},[refreshVisits]);
  useEffect(()=>{const id=new URLSearchParams(window.location.search).get("id");if(id)void loadVisit(id);},[loadVisit]);
@@ -91,7 +91,7 @@ export function AttendancePage() {
  async function deleteName(entry:Entry){if(!selected||!window.confirm("هل تريد حذف الاسم "+entry.name+" من الكشف؟"))return;const previous=selected;setSelected({...selected,entries:selected.entries.filter(e=>e.id!==entry.id)});if(entry.id.startsWith("local-")||!navigator.onLine){setMessage("تم حذف الاسم من النسخة المحفوظة على هذا الجهاز.");return;}try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:entry.id})});if(!response.ok)throw new Error();await refreshVisits();setMessage("تم حذف الاسم.");}catch{setSelected(previous);setMessage("تعذّر حذف الاسم من الخادم.");}}
  async function moveName(entry:Entry,direction:-1|1){if(!selected)return;const list=[...selected.entries].sort((a,b)=>a.position-b.position);const index=list.findIndex(e=>e.id===entry.id);const target=index+direction;if(index<0||target<0||target>=list.length)return;[list[index],list[target]]=[list[target],list[index]];const reordered=list.map((e,i)=>({...e,position:i}));setSelected({...selected,entries:reordered});if(entry.id.startsWith("local-")||!navigator.onLine){setMessage("تم تغيير الترتيب على هذا الجهاز.");return;}try{const responses=await Promise.all(reordered.map(e=>fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:e.id,position:e.position})})));if(responses.some(response=>!response.ok))throw new Error();setMessage("تم حفظ ترتيب الأسماء.");}catch{setMessage("تعذّر مزامنة الترتيب مع الخادم.");}}
  async function addName(){
-  if(!selected||!newName.trim())return;setBusy(true);
+  if(!selected||!newName.trim())return; if(selected.visit.id.startsWith("local-")||!navigator.onLine){const entry={id:"local-"+crypto.randomUUID(),name:newName.trim(),status:"unmarked" as const,position:selected.entries.length};setSelected({...selected,entries:[...selected.entries,entry]});setNewName("");setMessage("تمت إضافة الاسم على هذا الجهاز.");return;} setBusy(true);
   try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:newName.trim()})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر إضافة الاسم");setSelected({...selected,entries:[...selected.entries,data.entry]});setNewName("");setMessage("");await refreshVisits();}
   catch(error){const text=error instanceof Error?error.message:"تعذّر إضافة الاسم";setMessage(text);}
   finally{setBusy(false);}
