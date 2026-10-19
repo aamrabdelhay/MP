@@ -20,7 +20,7 @@ export async function PATCH(request:NextRequest,context:{params:Promise<{id:stri
  if(!requestHasAdminSession(request)) return jsonNoStore({error:"سجّل الدخول إلى الإدارة أولاً لتعديل الكشف."},{status:401});
  const {id}=await context.params; if(!validId.safeParse(id).success) return jsonNoStore({error:"الكشف غير موجود."},{status:404});
  let body:unknown; try {body=await request.json();} catch {return jsonNoStore({error:"البيانات غير صحيحة."},{status:400});}
- const parsed=z.object({entryId:z.string().uuid(),status:z.enum(["unmarked","present","absent"])}).safeParse(body);
+ const parsed=z.object({entryId:z.string().uuid(),status:z.enum(["unmarked","present","absent","moving"])}).safeParse(body);
  if(!parsed.success) return jsonNoStore({error:"اختيار الحالة غير صحيح."},{status:400});
  try {
   const result=await getDb().execute(sql`UPDATE attendance_entries SET status=${parsed.data.status} WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,status`);

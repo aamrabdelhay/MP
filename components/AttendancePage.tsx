@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Circle, FileSpreadsheet, Search, UserPlus, X } from "lucide-react";
+import { ArrowRight, Check, Circle, FileSpreadsheet, Navigation, Search, UserPlus, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
-type Visit = { id: string; title: string; total: number; present: number; absent: number; unmarked: number; createdAt?: string };
-type Entry = { id: string; name: string; status: "present" | "absent" | "unmarked"; position: number };
+type Visit = { id: string; title: string; total: number; present: number; absent: number; moving: number; unmarked: number; createdAt?: string };
+type Entry = { id: string; name: string; status: "present" | "absent" | "moving" | "unmarked"; position: number };
 type Detail = { visit: Visit; entries: Entry[] };
 
 export function AttendancePage() {
@@ -88,15 +88,16 @@ export function AttendancePage() {
     <div className="attendance-stats">
      <div className="attendance-stat stat-present"><Check size={20}/><span>حضور</span><strong>{counts.present}</strong></div>
      <div className="attendance-stat stat-absent"><X size={20}/><span>غياب</span><strong>{counts.absent}</strong></div>
+     <div className="attendance-stat stat-moving"><Navigation size={19}/><span>في الطريق</span><strong>{counts.moving}</strong></div>
      <div className="attendance-stat stat-unmarked"><Circle size={19}/><span>لم يُحدد</span><strong>{counts.unmarked}</strong></div>
     </div>
     <div className="attendance-tools"><label className="attendance-search"><Search size={18}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث بالاسم…"/></label><span>{filtered.length} من {selected.entries.length} اسم</span></div>
     <form className="attendance-add" onSubmit={e=>{e.preventDefault();void addName();}}><input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="إضافة اسم جديد إلى الكشف" maxLength={180}/><button disabled={busy||!newName.trim()}><UserPlus size={18}/> إضافة اسم</button></form>
-    <div className="attendance-list">{filtered.map((entry,index)=><div className={"attendance-row row-"+entry.status} key={entry.id}><span className="attendance-number">{index+1}</span><span className="attendance-name">{entry.name}</span><div className="attendance-markers" aria-label={"حالة "+entry.name}><button title="حضور" aria-label={"تسجيل حضور "+entry.name} className={entry.status==="present"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="present"?"unmarked":"present")}><Check size={18}/></button><button title="غياب" aria-label={"تسجيل غياب "+entry.name} className={entry.status==="absent"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="absent"?"unmarked":"absent")}><X size={18}/></button><button title="لم يُحدد" aria-label={"إلغاء تحديد "+entry.name} className={entry.status==="unmarked"?"marker-active":""} onClick={()=>void changeStatus(entry,"unmarked")}><Circle size={16}/></button></div></div>)}
+    <div className="attendance-list">{filtered.map((entry,index)=><div className={"attendance-row row-"+entry.status} key={entry.id}><span className="attendance-number">{index+1}</span><span className="attendance-name">{entry.name}</span><div className="attendance-markers" aria-label={"حالة "+entry.name}><button title="حضور" aria-label={"تسجيل حضور "+entry.name} className={entry.status==="present"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="present"?"unmarked":"present")}><Check size={18}/></button><button title="غياب" aria-label={"تسجيل غياب "+entry.name} className={entry.status==="absent"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="absent"?"unmarked":"absent")}><X size={18}/></button><button title="في الطريق للمكان" aria-label={"تسجيل أن "+entry.name+" في الطريق للمكان"} className={entry.status==="moving"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="moving"?"unmarked":"moving")}><Navigation size={17}/></button><button title="لم يُحدد" aria-label={"إلغاء تحديد "+entry.name} className={entry.status==="unmarked"?"marker-active":""} onClick={()=>void changeStatus(entry,"unmarked")}><Circle size={16}/></button></div></div>)}
     {filtered.length===0&&<p className="attendance-empty">لا توجد أسماء مطابقة للبحث.</p>}</div>
    </section>}
    {!selected&&<section className="attendance-visits"><div className="attendance-section-title"><h2>كشوف الزيارات المحفوظة</h2></div>
-    {loading?<p className="attendance-empty">جارٍ تحميل الكشوف…</p>:visits.length===0?<p className="attendance-empty">لا توجد كشوف بعد. سجّل الدخول للإدارة لإنشاء أول كشف.</p>:<div className="attendance-visit-list">{visits.map(visit=><button key={visit.id} className="attendance-visit-card" onClick={()=>{router.push("/attendance?id="+visit.id);void loadVisit(visit.id);}}><span><strong>{visit.title}</strong><small>{visit.total} اسمًا</small></span><span className="visit-mini-counts"><b>{visit.present} حضور</b><b>{visit.absent} غياب</b><b>{visit.unmarked} لم يُحدد</b></span><ArrowRight size={18}/></button>)}</div>}
+    {loading?<p className="attendance-empty">جارٍ تحميل الكشوف…</p>:visits.length===0?<p className="attendance-empty">لا توجد كشوف بعد. سجّل الدخول للإدارة لإنشاء أول كشف.</p>:<div className="attendance-visit-list">{visits.map(visit=><button key={visit.id} className="attendance-visit-card" onClick={()=>{router.push("/attendance?id="+visit.id);void loadVisit(visit.id);}}><span><strong>{visit.title}</strong><small>{visit.total} اسمًا</small></span><span className="visit-mini-counts"><b>{visit.present} حضور</b><b>{visit.absent} غياب</b><b>{visit.moving} في الطريق</b><b>{visit.unmarked} لم يُحدد</b></span><ArrowRight size={18}/></button>)}</div>}
    </section>}
    <p className="attendance-security">عرض الكشوف متاح، أما رفع الملفات وتعديل الحضور وإضافة الأسماء فيتطلب تسجيل الدخول للإدارة.</p>
   </div>

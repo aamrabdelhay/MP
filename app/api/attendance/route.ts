@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const createSchema = z.object({ title: z.string().trim().min(1).max(180), names: z.array(z.string().trim().min(1).max(180)).min(1).max(2000) });
 export async function GET() {
  try {
-  const result = await getDb().execute(sql`SELECT v.id,v.title,v.created_at AS "createdAt",COUNT(e.id)::int AS total,COUNT(e.id) FILTER (WHERE e.status='present')::int AS present,COUNT(e.id) FILTER (WHERE e.status='absent')::int AS absent,COUNT(e.id) FILTER (WHERE e.status='unmarked')::int AS unmarked FROM attendance_visits v LEFT JOIN attendance_entries e ON e.visit_id=v.id GROUP BY v.id ORDER BY v.created_at DESC`);
+  const result = await getDb().execute(sql`SELECT v.id,v.title,v.created_at AS "createdAt",COUNT(e.id)::int AS total,COUNT(e.id) FILTER (WHERE e.status='present')::int AS present,COUNT(e.id) FILTER (WHERE e.status='absent')::int AS absent,COUNT(e.id) FILTER (WHERE e.status='unmarked')::int AS unmarked,COUNT(e.id) FILTER (WHERE e.status='moving')::int AS moving FROM attendance_visits v LEFT JOIN attendance_entries e ON e.visit_id=v.id GROUP BY v.id ORDER BY v.created_at DESC`);
   return jsonNoStore({visits:result});
  } catch(error) { console.error("Attendance list failed",error); return jsonNoStore({error:"تعذّر تحميل كشوف الحضور. تأكد من إعداد قاعدة البيانات."},{status:500}); }
 }
