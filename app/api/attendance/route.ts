@@ -18,7 +18,8 @@ export async function POST(request:NextRequest) {
  let body:unknown; try { body=await request.json(); } catch { return jsonNoStore({error:"البيانات المرسلة غير صحيحة."},{status:400}); }
  const parsed=createSchema.safeParse(body);
  if(!parsed.success) return jsonNoStore({error:"أدخل اسم الزيارة وقائمة أسماء صحيحة."},{status:400});
- const names=[...new Set(parsed.data.names.map(name=>name.replace(/\s+/g," ").trim()).filter(Boolean))];
+ const normalized=parsed.data.names.map(item=>{const entry=typeof item==="string"?{name:item,phone:""}:item;return {name:entry.name.replace(/\s+/g," ").trim(),phone:entry.phone??""};}).filter(entry=>entry.name);
+ const names=[...new Map(normalized.map(entry=>[entry.name.toLocaleLowerCase("ar"),entry])).values()];
  if(!names.length) return jsonNoStore({error:"لم يتم العثور على أسماء في الملف."},{status:400});
  try {
   const db=getDb(); const result=await db.execute(sql`INSERT INTO attendance_visits(title) VALUES(${parsed.data.title}) RETURNING id,title`);
