@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, Check, Circle, FileSpreadsheet, Navigation, Search, UserPlus, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
-type Visit = { id: string; title: string; total: number; present: number; absent: number; unmarked: number; createdAt?: string };
+type Visit = { id: string; title: string; total: number; present: number; absent: number; moving: number; unmarked: number; createdAt?: string };
 type Entry = { id: string; name: string; status: "present" | "absent" | "moving" | "unmarked"; position: number };
 type Detail = { visit: Visit; entries: Entry[] };
 
