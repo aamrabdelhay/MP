@@ -2,11 +2,11 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Circle, Copy, FileSpreadsheet, Navigation, Search, Star, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, Check, Circle, Copy, FileSpreadsheet, Navigation, Pencil, Phone, Search, Star, Trash2, UserPlus, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
 type Visit = { id: string; title: string; total: number; present: number; absent: number; moving: number; joker: number; unmarked: number; createdAt?: string };
-type Entry = { id: string; name: string; status: "present" | "absent" | "moving" | "joker" | "unmarked"; position: number };
+type Entry = { id: string; name: string; phone?: string | null; status: "present" | "absent" | "moving" | "joker" | "unmarked"; position: number };
 type Detail = { visit: Visit; entries: Entry[] };
 
 export function AttendancePage() {
@@ -19,7 +19,7 @@ export function AttendancePage() {
  const [search,setSearch]=useState("");
  const [title,setTitle]=useState("");
  const [newName,setNewName]=useState("");
- const [names,setNames]=useState<string[]>([]);
+ const [names,setNames]=useState<Array<{name:string;phone:string}>>([]);
  const [fileName,setFileName]=useState("");
  const [isOnline,setIsOnline]=useState(true);
  useEffect(()=>{
@@ -54,11 +54,13 @@ export function AttendancePage() {
    if(!rows.length)throw new Error("الملف لا يحتوي على أسماء.");
    const first=rows[0].map(v=>String(v??"").trim());
    const headerIndex=first.findIndex(v=>/^(الاسم|اسم الطالب|اسم الطالبة|اسم الطالب\/ة|name|full name|student name)$/i.test(v));
+   const phoneIndex=first.findIndex(v=>/^(رقم الهاتف|رقم التليفون|رقم الموبايل|التليفون|الهاتف|phone|phone number|mobile|mobile number)$/i.test(v));
    const column=headerIndex>=0?headerIndex:Math.max(0,first.findIndex(v=>String(v).trim()!==""));
    const start=headerIndex>=0?1:0;
-   const parsed=rows.slice(start).map(row=>String(row[column]??"").replace(/\s+/g," ").trim()).filter(Boolean);
+   const parsed=rows.slice(start).map(row=>({name:String(row[column]??"").replace(/\s+/g," ").trim(),phone:phoneIndex>=0?String(row[phoneIndex]??"").trim():""})).filter(entry=>entry.name);
    if(!parsed.length)throw new Error("لم أجد أسماء في العمود الأول. تأكد أن الأسماء في عمود واحد.");
-   setNames([...new Set(parsed)]);setFileName(file.name);
+   const unique=[...new Map(parsed.map(entry=>[entry.name.toLocaleLowerCase("ar"),entry])).values()];
+   setNames(unique);setFileName(file.name);
    if(!title.trim())setTitle(file.name.replace(/\.(xlsx|xls|csv)$/i,"").replace(/[_-]+/g," ").trim());
    setMessage("");
   }catch(error){setMessage(error instanceof Error?error.message:"تعذّر قراءة الملف");}
@@ -111,7 +113,7 @@ export function AttendancePage() {
     </div>
     <div className="attendance-tools"><label className="attendance-search"><Search size={18}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث بالاسم…"/></label><span>{filtered.length} ظاهر · {selected.entries.length-counts.joker} اسم محسوب من إجمالي الكشف</span><button className="attendance-orange" type="button" onClick={()=>void copyCounts()}><Copy size={16}/> كوبي الحالة</button></div>
     <form className="attendance-add" onSubmit={e=>{e.preventDefault();void addName();}}><input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="إضافة اسم جديد إلى الكشف" maxLength={180}/><button disabled={busy||!newName.trim()}><UserPlus size={18}/> إضافة اسم</button></form>
-    <div className="attendance-list">{filtered.map((entry,index)=><div className={"attendance-row row-"+entry.status} key={entry.id}><span className="attendance-number">{index+1}</span><span className="attendance-name">{entry.name}</span><div className="attendance-markers" aria-label={"حالة "+entry.name}><button title="حضور" aria-label={"تسجيل حضور "+entry.name} className={entry.status==="present"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="present"?"unmarked":"present")}><Check size={18}/></button><button title="غياب" aria-label={"تسجيل غياب "+entry.name} className={entry.status==="absent"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="absent"?"unmarked":"absent")}><X size={18}/></button><button title="في الطريق للمكان" aria-label={"تسجيل أن "+entry.name+" في الطريق للمكان"} className={entry.status==="moving"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="moving"?"unmarked":"moving")}><Navigation size={17}/></button><button title="جوكر — لا يُحتسب ضمن العدد" aria-label={"تحديد "+entry.name+" كجوكر غير محسوب"} className={entry.status==="joker"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="joker"?"unmarked":"joker")}><Star size={16}/></button><button title="لم يُحدد" aria-label={"إلغاء تحديد "+entry.name} className={entry.status==="unmarked"?"marker-active":""} onClick={()=>void changeStatus(entry,"unmarked")}><Circle size={16}/></button></div></div>)}
+    <div className="attendance-list">{filtered.map((entry,index)=><div className={"attendance-row row-"+entry.status} key={entry.id}><span className="attendance-number">{index+1}</span><span className="attendance-name">{entry.name}</span>{entry.phone&&<a className="attendance-phone" href={"tel:"+entry.phone.replace(/[^+\\d]/g,"")} aria-label={"اتصال بـ "+entry.name} title={"اتصال بـ "+entry.name}><Phone size={17}/></a>}<button type="button" className="attendance-row-action" title="تعديل الاسم ورقم الهاتف" onClick={()=>void editName(entry)}><Pencil size={15}/></button><button type="button" className="attendance-row-action" title="تحريك لأعلى" onClick={()=>void moveName(entry,-1)}><ArrowUp size={15}/></button><button type="button" className="attendance-row-action" title="تحريك لأسفل" onClick={()=>void moveName(entry,1)}><ArrowDown size={15}/></button><button type="button" className="attendance-row-action" title="حذف الاسم" onClick={()=>void deleteName(entry)}><Trash2 size={15}/></button><div className="attendance-markers" aria-label={"حالة "+entry.name}><button title="حضور" aria-label={"تسجيل حضور "+entry.name} className={entry.status==="present"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="present"?"unmarked":"present")}><Check size={18}/></button><button title="غياب" aria-label={"تسجيل غياب "+entry.name} className={entry.status==="absent"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="absent"?"unmarked":"absent")}><X size={18}/></button><button title="في الطريق للمكان" aria-label={"تسجيل أن "+entry.name+" في الطريق للمكان"} className={entry.status==="moving"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="moving"?"unmarked":"moving")}><Navigation size={17}/></button><button title="جوكر — لا يُحتسب ضمن العدد" aria-label={"تحديد "+entry.name+" كجوكر غير محسوب"} className={entry.status==="joker"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="joker"?"unmarked":"joker")}><Star size={16}/></button><button title="لم يُحدد" aria-label={"إلغاء تحديد "+entry.name} className={entry.status==="unmarked"?"marker-active":""} onClick={()=>void changeStatus(entry,"unmarked")}><Circle size={16}/></button></div></div>)}
     {filtered.length===0&&<p className="attendance-empty">لا توجد أسماء مطابقة للبحث.</p>}</div>
    </section>}
    {!selected&&<section className="attendance-visits"><div className="attendance-section-title"><h2>كشوف الزيارات المحفوظة</h2></div>
