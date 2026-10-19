@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Circle, FileSpreadsheet, Navigation, Search, Star, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowRight, Check, Circle, Copy, FileSpreadsheet, Navigation, Search, Star, Trash2, UserPlus, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
 type Visit = { id: string; title: string; total: number; present: number; absent: number; moving: number; joker: number; unmarked: number; createdAt?: string };
@@ -44,7 +44,7 @@ export function AttendancePage() {
  useEffect(()=>{void refreshVisits();},[refreshVisits]);
  useEffect(()=>{const id=new URLSearchParams(window.location.search).get("id");if(id)void loadVisit(id);},[loadVisit]);
  const counts=useMemo(()=>{const entries=selected?.entries||[];return {present:entries.filter(e=>e.status==="present").length,absent:entries.filter(e=>e.status==="absent").length,moving:entries.filter(e=>e.status==="moving").length,joker:entries.filter(e=>e.status==="joker").length,unmarked:entries.filter(e=>e.status==="unmarked").length};},[selected]);
- const filtered=useMemo(()=>{const q=search.trim().toLocaleLowerCase("ar");return (selected?.entries||[]).filter(e=>e.name.toLocaleLowerCase("ar").includes(q));},[selected,search]);
+ const filtered=useMemo(()=>{const q=search.trim().toLocaleLowerCase("ar");return (selected?.entries||[]).filter(e=>e.name.toLocaleLowerCase("ar").includes(q)).sort((a,b)=>(a.status==="joker"?-1:0)-(b.status==="joker"?-1:0)||a.position-b.position);},[selected,search]);
  async function chooseFile(file?:File){
   if(!file)return;
   try{
@@ -76,7 +76,7 @@ export function AttendancePage() {
   try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:entry.id,status})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر حفظ الحالة");await refreshVisits();}
   catch(error){if(!navigator.onLine){setMessage("تم حفظ التغيير على هذا الجهاز دون اتصال. سيظل محليًا حتى تعود للشبكة.");return;}setSelected(previous);const text=error instanceof Error?error.message:"تعذّر حفظ الحالة";setMessage(text);}
  }
- async function deleteVisit(visit:Visit){
+ async function copyCounts(){if(!selected)return;const text=`الحضور: ${counts.present}\nالغياب: ${counts.absent}\nفي الطريق: ${counts.moving}\nالجوكر: ${counts.joker}\nلم يُحدد: ${counts.unmarked}`;try{await navigator.clipboard.writeText(text);setMessage("تم نسخ ملخص الحالات.");}catch{setMessage(text);}}\n async function deleteVisit(visit:Visit){
   if(!window.confirm(`هل أنت متأكد من حذف كشف "${visit.title}"؟ سيتم حذف جميع الأسماء وحالات الحضور التابعة له نهائيًا.`))return;
   setBusy(true);setMessage("");
   try{const response=await fetch("/api/attendance/"+visit.id,{method:"DELETE"});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر حذف الكشف");setVisits(current=>current.filter(item=>item.id!==visit.id));setMessage("تم حذف الكشف بنجاح.");}
@@ -109,7 +109,7 @@ export function AttendancePage() {
      <div className="attendance-stat stat-joker"><Star size={19}/><span>جوكر (غير محسوب)</span><strong>{counts.joker}</strong></div>
      <div className="attendance-stat stat-unmarked"><Circle size={19}/><span>لم يُحدد</span><strong>{counts.unmarked}</strong></div>
     </div>
-    <div className="attendance-tools"><label className="attendance-search"><Search size={18}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث بالاسم…"/></label><span>{filtered.length} ظاهر · {selected.entries.length-counts.joker} اسم محسوب من إجمالي الكشف</span></div>
+    <div className="attendance-tools"><label className="attendance-search"><Search size={18}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث بالاسم…"/></label><span>{filtered.length} ظاهر · {selected.entries.length-counts.joker} اسم محسوب من إجمالي الكشف</span><button className="attendance-orange" type="button" onClick={()=>void copyCounts()}><Copy size={16}/> كوبي الحالة</button></div>
     <form className="attendance-add" onSubmit={e=>{e.preventDefault();void addName();}}><input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="إضافة اسم جديد إلى الكشف" maxLength={180}/><button disabled={busy||!newName.trim()}><UserPlus size={18}/> إضافة اسم</button></form>
     <div className="attendance-list">{filtered.map((entry,index)=><div className={"attendance-row row-"+entry.status} key={entry.id}><span className="attendance-number">{index+1}</span><span className="attendance-name">{entry.name}</span><div className="attendance-markers" aria-label={"حالة "+entry.name}><button title="حضور" aria-label={"تسجيل حضور "+entry.name} className={entry.status==="present"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="present"?"unmarked":"present")}><Check size={18}/></button><button title="غياب" aria-label={"تسجيل غياب "+entry.name} className={entry.status==="absent"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="absent"?"unmarked":"absent")}><X size={18}/></button><button title="في الطريق للمكان" aria-label={"تسجيل أن "+entry.name+" في الطريق للمكان"} className={entry.status==="moving"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="moving"?"unmarked":"moving")}><Navigation size={17}/></button><button title="جوكر — لا يُحتسب ضمن العدد" aria-label={"تحديد "+entry.name+" كجوكر غير محسوب"} className={entry.status==="joker"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="joker"?"unmarked":"joker")}><Star size={16}/></button><button title="لم يُحدد" aria-label={"إلغاء تحديد "+entry.name} className={entry.status==="unmarked"?"marker-active":""} onClick={()=>void changeStatus(entry,"unmarked")}><Circle size={16}/></button></div></div>)}
     {filtered.length===0&&<p className="attendance-empty">لا توجد أسماء مطابقة للبحث.</p>}</div>
