@@ -21,15 +21,25 @@ export function AttendancePage() {
  const [newName,setNewName]=useState("");
  const [names,setNames]=useState<string[]>([]);
  const [fileName,setFileName]=useState("");
+ const [isOnline,setIsOnline]=useState(true);
+ useEffect(()=>{
+  setIsOnline(navigator.onLine);
+  const online=()=>setIsOnline(true),offline=()=>setIsOnline(false);
+  window.addEventListener("online",online);window.addEventListener("offline",offline);
+  if("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(()=>{});
+  try{const cached=localStorage.getItem("attendance-offline-cache");if(cached){const data=JSON.parse(cached);if(!navigator.onLine){setVisits(data.visits||[]);setSelected(data.selected||null);setLoading(false);}}}catch{}
+  return()=>{window.removeEventListener("online",online);window.removeEventListener("offline",offline);};
+ },[]);
+ useEffect(()=>{try{localStorage.setItem("attendance-offline-cache",JSON.stringify({visits,selected}));}catch{}},[visits,selected]);
 
  const refreshVisits=useCallback(async()=>{
   try { const response=await fetch("/api/attendance",{cache:"no-store"}); const data=await response.json(); if(!response.ok) throw new Error(data.error||"تعذّر تحميل الكشوف"); setVisits(data.visits||[]); }
-  catch(error){setMessage(error instanceof Error?error.message:"حدث خطأ غير متوقع");}
+  catch(error){try{const cached=localStorage.getItem("attendance-offline-cache");if(cached){const data=JSON.parse(cached);setVisits(data.visits||[]);if(!navigator.onLine)setMessage("أنت تعمل دون اتصال. يتم عرض آخر نسخة محفوظة على هذا الجهاز.");else setMessage(error instanceof Error?error.message:"حدث خطأ غير متوقع");}else setMessage(error instanceof Error?error.message:"حدث خطأ غير متوقع");}catch{setMessage("تعذّر تحميل الكشوف المحفوظة.");}}
   finally{setLoading(false);}
  },[]);
  const loadVisit=useCallback(async(id:string)=>{
   try {const response=await fetch("/api/attendance/"+id,{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر فتح الكشف");setSelected(data);setMessage("");}
-  catch(error){setMessage(error instanceof Error?error.message:"تعذّر فتح الكشف");setSelected(null);}
+  catch(error){try{const cached=localStorage.getItem("attendance-offline-cache");const data=cached?JSON.parse(cached):null;const local=data?.selected;if(!navigator.onLine&&local&&local.visit?.id===id){setSelected(local);setMessage("أنت تعمل دون اتصال. التعديلات محفوظة على هذا الجهاز فقط.");}else{setMessage(error instanceof Error?error.message:"تعذّر فتح الكشف");setSelected(null);}}catch{setMessage("تعذّر فتح الكشف");setSelected(null);}}
  },[]);
  useEffect(()=>{void refreshVisits();},[refreshVisits]);
  useEffect(()=>{const id=new URLSearchParams(window.location.search).get("id");if(id)void loadVisit(id);},[loadVisit]);
@@ -64,7 +74,7 @@ export function AttendancePage() {
   if(!selected)return;
   const previous=selected;setSelected({...selected,entries:selected.entries.map(e=>e.id===entry.id?{...e,status}:e)});
   try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:entry.id,status})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر حفظ الحالة");await refreshVisits();}
-  catch(error){setSelected(previous);const text=error instanceof Error?error.message:"تعذّر حفظ الحالة";setMessage(text);}
+  catch(error){if(!navigator.onLine){setMessage("تم حفظ التغيير على هذا الجهاز دون اتصال. سيظل محليًا حتى تعود للشبكة.");return;}setSelected(previous);const text=error instanceof Error?error.message:"تعذّر حفظ الحالة";setMessage(text);}
  }
  async function deleteVisit(visit:Visit){
   if(!window.confirm(`هل أنت متأكد من حذف كشف "${visit.title}"؟ سيتم حذف جميع الأسماء وحالات الحضور التابعة له نهائيًا.`))return;
@@ -81,7 +91,7 @@ export function AttendancePage() {
  }
  return <main className="attendance-page" dir="rtl">
   <div className="attendance-wrap">
-   <header className="attendance-header"><a className="attendance-back" href="/"><ArrowRight size={18}/> الصفحة الرئيسية</a><div><span className="attendance-kicker">جامعة العاصمة</span><h1>كشف الحضور</h1><p>إدارة حضور الزيارات العسكرية</p></div></header>
+   <header className="attendance-header"><span className={"attendance-kicker "+(isOnline?"":"offline-badge")}>{isOnline?"متصل بالإنترنت":"وضع عدم الاتصال"}</span><div><span className="attendance-kicker">جامعة العاصمة</span><h1>كشف الحضور</h1><p>إدارة حضور الزيارات العسكرية</p></div></header>
    {message&&<div className="attendance-message" role="alert">{message}{message.includes("سجّل الدخول")&&<a href="/admin"> تسجيل الدخول للإدارة</a>}</div>}
    {!selected&&<section className="attendance-upload">
     <div className="attendance-section-title"><FileSpreadsheet size={22}/><div><h2>إنشاء كشف زيارة جديد</h2><p>ارفع ملف Excel يحتوي على الأسماء في عمود واحد.</p></div></div>
@@ -107,7 +117,7 @@ export function AttendancePage() {
    {!selected&&<section className="attendance-visits"><div className="attendance-section-title"><h2>كشوف الزيارات المحفوظة</h2></div>
     {loading?<p className="attendance-empty">جارٍ تحميل الكشوف…</p>:visits.length===0?<p className="attendance-empty">لا توجد كشوف بعد. سجّل الدخول للإدارة لإنشاء أول كشف.</p>:<div className="attendance-visit-list">{visits.map(visit=><div key={visit.id} className="attendance-visit-card"><button className="attendance-visit-open" onClick={()=>{router.push("/attendance?id="+visit.id);void loadVisit(visit.id);}}><span><strong>{visit.title}</strong><small>{visit.total} اسمًا محسوبًا</small></span><span className="visit-mini-counts"><b>{visit.present} حضور</b><b>{visit.absent} غياب</b><b>{visit.moving} في الطريق</b><b>{visit.joker} جوكر</b><b>{visit.unmarked} لم يُحدد</b></span><ArrowRight size={18}/></button><button className="attendance-delete" disabled={busy} onClick={()=>void deleteVisit(visit)}><Trash2 size={16}/> حذف الكشف</button></div>)}</div>}
    </section>}
-   <p className="attendance-security">عرض الكشوف متاح، أما رفع الملفات وتعديل الحضور وإضافة الأسماء فيتطلب تسجيل الدخول للإدارة.</p>
+   <p className="attendance-security">{isOnline?"تُحفظ البيانات المتصلة على الخادم.":"وضع عدم الاتصال يعرض آخر نسخة محفوظة على هذا الجهاز؛ قد لا تتزامن التعديلات مع الخادم."}</p>
   </div>
  </main>;
 }
