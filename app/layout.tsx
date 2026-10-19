@@ -11,7 +11,8 @@ import { Footer } from "@/components/Footer";
 export const metadata: Metadata = {
   title: "جامعة العاصمة | Capital University",
   description: "بوابة التسجيل الإلكتروني لجامعة العاصمة — Capital University online registration portal.",
-  applicationName: "Capital University Registration",
+  applicationName: "كشف الحضور - جامعة العاصمة",
+  manifest: "/manifest.webmanifest",
   robots: {
     index: false,
     follow: false,
