@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
-import { requestHasAdminSession } from "@/lib/auth";
 import { getDb } from "@/lib/db";
 import { jsonNoStore } from "@/lib/http";
 export const runtime = "nodejs";
@@ -14,7 +13,6 @@ export async function GET() {
  } catch(error) { console.error("Attendance list failed",error); return jsonNoStore({error:"تعذّر تحميل كشوف الحضور. تأكد من إعداد قاعدة البيانات."},{status:500}); }
 }
 export async function POST(request:NextRequest) {
- if(!requestHasAdminSession(request)) return jsonNoStore({error:"سجّل الدخول إلى الإدارة أولاً لإضافة كشف حضور."},{status:401});
  let body:unknown; try { body=await request.json(); } catch { return jsonNoStore({error:"البيانات المرسلة غير صحيحة."},{status:400}); }
  const parsed=createSchema.safeParse(body);
  if(!parsed.success) return jsonNoStore({error:"أدخل اسم الزيارة وقائمة أسماء صحيحة."},{status:400});
