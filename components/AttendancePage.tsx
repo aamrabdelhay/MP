@@ -33,7 +33,7 @@ export function AttendancePage() {
  },[]);
  useEffect(()=>{void refreshVisits();},[refreshVisits]);
  useEffect(()=>{const id=new URLSearchParams(window.location.search).get("id");if(id)void loadVisit(id);},[loadVisit]);
- const counts=useMemo(()=>{const entries=selected?.entries||[];return {present:entries.filter(e=>e.status==="present").length,absent:entries.filter(e=>e.status==="absent").length,unmarked:entries.filter(e=>e.status==="unmarked").length};},[selected]);
+ const counts=useMemo(()=>{const entries=selected?.entries||[];return {present:entries.filter(e=>e.status==="present").length,absent:entries.filter(e=>e.status==="absent").length,moving:entries.filter(e=>e.status==="moving").length,unmarked:entries.filter(e=>e.status==="unmarked").length};},[selected]);
  const filtered=useMemo(()=>{const q=search.trim().toLocaleLowerCase("ar");return (selected?.entries||[]).filter(e=>e.name.toLocaleLowerCase("ar").includes(q));},[selected,search]);
  async function chooseFile(file?:File){
   if(!file)return;
