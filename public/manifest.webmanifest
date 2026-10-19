@@ -1,0 +1,13 @@
+{
+  "name": "كشف الحضور - جامعة العاصمة",
+  "short_name": "كشف الحضور",
+  "description": "إدارة كشوف الزيارات العسكرية",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f7",
+  "theme_color": "#0f3563",
+  "icons": []
+}
