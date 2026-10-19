@@ -8,6 +8,13 @@
       "when": 1792082091064,
       "tag": "0000_steep_rhino",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792409400000,
+      "tag": "0001_attendance",
+      "breakpoints": true
     }
   ]
 }
