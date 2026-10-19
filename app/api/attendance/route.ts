@@ -22,4 +22,8 @@ export async function POST(request:NextRequest) {
  if(!names.length) return jsonNoStore({error:"لم يتم العثور على أسماء في الملف."},{status:400});
  try {
   const db=getDb(); const result=await db.execute(sql`INSERT INTO attendance_visits(title) VALUES(${parsed.data.title}) RETURNING id,title`);
-  const visit=result[0] as {id:string;title:string}|undefined; if(!visit...[truncated]
+  const visit=result[0] as {id:string;title:string}|undefined; if(!visit) throw new Error("Could not create visit");
+  for(let i=0;i<names.length;i++) await db.execute(sql`INSERT INTO attendance_entries(visit_id,full_name,position) VALUES(${visit.id}::uuid,${names[i]},${i})`);
+  return jsonNoStore({visit},{status:201});
+ } catch(error) { console.error("Attendance create failed",error); return jsonNoStore({error:"تعذّر حفظ كشف الحضور. حاول مرة أخرى."},{status:500}); }
+}
