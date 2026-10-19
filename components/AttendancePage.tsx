@@ -27,7 +27,7 @@ export function AttendancePage() {
   const online=()=>setIsOnline(true),offline=()=>setIsOnline(false);
   window.addEventListener("online",online);window.addEventListener("offline",offline);
   if("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(()=>{});
-  try{const cached=localStorage.getItem("attendance-offline-cache");if(cached){const data=JSON.parse(cached);setVisits(data.visits||[]);if(data.selected?.visit?.id?.startsWith("local-"))setSelected(data.selected);if(!navigator.onLine)setLoading(false);}}catch{}
+  try{const cached=localStorage.getItem("attendance-offline-cache");if(cached){const data=JSON.parse(cached);setVisits(data.visits||[]);if(data.selected&&(!navigator.onLine||data.selected.visit?.id?.startsWith("local-")))setSelected(data.selected);if(!navigator.onLine)setLoading(false);}}catch{}
   return()=>{window.removeEventListener("online",online);window.removeEventListener("offline",offline);};
  },[]);
  useEffect(()=>{try{localStorage.setItem("attendance-offline-cache",JSON.stringify({visits,selected}));}catch{}},[visits,selected]);
