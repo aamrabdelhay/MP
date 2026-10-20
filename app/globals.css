@@ -2011,3 +2011,5 @@ textarea:focus-visible {
 .dark-mode .attendance-message{background:#402824;border-color:#754238;color:#ffc5b9}
 .dark-mode .attendance-reset{background:#30271f;border-color:#78552e;color:#ffc889}
 @media(max-width:560px){.attendance-header{align-items:flex-start}.attendance-theme-toggle span{display:none}.attendance-reset{width:100%}}
+
+.dark-mode .attendance-present-time,.dark-mode .attendance-file-count{color:#9ae2bb}
