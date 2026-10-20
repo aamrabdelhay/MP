@@ -71,6 +71,11 @@ export function AttendancePage() {
    if(phoneIndex<0&&headerIndex<0){const phonePattern=/^[+()\d٠-٩۰-۹ .-]{7,20}$/;const candidateCount=Math.max(0,...rows.map(row=>row.length));for(let col=1;col<candidateCount;col++){const values=rows.slice(0,Math.min(rows.length,12)).map(row=>String(row[col]??"").trim()).filter(Boolean);if(values.length>=2&&values.filter(value=>phonePattern.test(value)&&/[0-9٠-٩۰-۹]/.test(value)).length/values.length>=0.7){phoneIndex=col;break;}}}
    const column=headerIndex>=0?headerIndex:Math.max(0,first.findIndex(v=>String(v).trim()!==""));
    const start=headerIndex>=0?1:0;
+    if(phoneIndex<0&&headerIndex>=0){
+     const dataRows=rows.slice(start);
+     const candidates=first.map((_,index)=>index).filter(index=>index!==column);
+     phoneIndex=candidates.find(index=>{const values=dataRows.map(row=>normalizePhoneNumber(row[index])).filter(Boolean);return values.length>=2&&values.filter(value=>/^(?:20)?0?1[0125]\d{8}$/.test(value.replace(/\D/g,""))).length/values.length>=0.7;})??-1;
+    }
    const parsed=rows.slice(start).map(row=>({name:String(row[column]??"").replace(/\s+/g," ").trim(),phone:phoneIndex>=0?normalizePhoneNumber(row[phoneIndex]):""})).filter(entry=>entry.name);
    if(!parsed.length)throw new Error("لم أجد أسماء في العمود الأول. تأكد أن الأسماء في عمود واحد.");
    const unique=[...new Map(parsed.map(entry=>[entry.name.toLocaleLowerCase("ar"),entry])).values()];
