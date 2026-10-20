@@ -29,7 +29,13 @@ export async function PATCH(request:NextRequest,context:{params:Promise<{id:stri
  if(!parsed.success) return jsonNoStore({error:"اختيار الحالة غير صحيح."},{status:400});
  try {
   await getDb().execute(sql`ALTER TABLE attendance_entries ADD COLUMN IF NOT EXISTS status_changed_at timestamptz`);
-  const result=await getDb().execute(sql`UPDATE attendance_entries SET status=COALESCE(${parsed.data.status??null},status), status_changed_at=CASE WHEN ${parsed.data.status??null} IS NULL THEN status_changed_at WHEN ${parsed.data.status??null}=${"present"} THEN CASE WHEN status=${"present"} AND status_changed_at IS NOT NULL THEN status_changed_at ELSE now() END ELSE NULL END, full_name=COALESCE(${parsed.data.name?.replace(/\\s+/g," ").trim()??null},full_name), phone_number=COALESCE(${parsed.data.phone??null},phone_number), position=COALESCE(${parsed.data.position??null},position) WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position,status_changed_at AS "statusChangedAt"` );
+  const statusUpdate=parsed.data.status===undefined?sql`status = status`:sql`status = ${parsed.data.status}`;
+  const checkInTimeUpdate=parsed.data.status===undefined
+   ?sql`status_changed_at = status_changed_at`
+   :parsed.data.status==="present"
+    ?sql`status_changed_at = CASE WHEN status = 'present' AND status_changed_at IS NOT NULL THEN status_changed_at ELSE now() END`
+    :sql`status_changed_at = NULL`;
+  const result=await getDb().execute(sql`UPDATE attendance_entries SET ${statusUpdate}, ${checkInTimeUpdate}, full_name=COALESCE(${parsed.data.name?.replace(/\\s+/g," ").trim()??null},full_name), phone_number=COALESCE(${parsed.data.phone??null},phone_number), position=COALESCE(${parsed.data.position??null},position) WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position,status_changed_at AS "statusChangedAt"`);
   if(!result.length) return jsonNoStore({error:"الاسم غير موجود في هذا الكشف."},{status:404});
   return jsonNoStore({entry:result[0]});
  } catch(error) {console.error("Attendance status update failed",error);return jsonNoStore({error:"تعذّر حفظ الحالة."},{status:500});}
