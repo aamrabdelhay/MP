@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowDown, ArrowRight, ArrowUp, Check, Circle, Copy, FileSpreadsheet, Navigation, Pencil, Phone, Search, Star, Trash2, UserPlus, X } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUp, Check, Circle, Copy, FileSpreadsheet, Moon, Navigation, Pencil, Phone, Search, Star, Sun, Trash2, UserPlus, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
 type Visit = { id: string; title: string; total: number; present: number; absent: number; moving: number; joker: number; unmarked: number; createdAt?: string };
@@ -57,7 +57,8 @@ export function AttendancePage() {
    const first=rows[0].map(v=>String(v??"").trim());
    const normalizeHeader=(value:string)=>value.toLocaleLowerCase("ar").trim().replaceAll("_"," ").replaceAll("ـ"," ").replace(/\s+/g," ");
    const headerIndex=first.findIndex(v=>/^(الاسم|اسم الطالب|اسم الطالبة|اسم الطالب\/ة|اسم الطالب بالكامل|الاسم بالكامل|اسم المتدرب|name|full name|student name)$/i.test(normalizeHeader(v)));
-   const phoneIndex=first.findIndex(v=>/(phone|mobile|telephone|tel|رقم.*(هاتف|تليفون|موبايل|جوال)|هاتف|تليفون|موبايل|جوال|رقم.*(اتصال|محمول))/i.test(normalizeHeader(v)));
+   let phoneIndex=first.findIndex(v=>/(phone|mobile|telephone|tel|رقم.*(هاتف|تليفون|موبايل|جوال)|هاتف|تليفون|موبايل|جوال|رقم.*(اتصال|محمول))/i.test(normalizeHeader(v)));
+   if(phoneIndex<0&&headerIndex<0){const phonePattern=/^[+()\\d٠-٩۰-۹ .-]{7,20}$/;const candidateCount=Math.max(0,...rows.map(row=>row.length));for(let col=1;col<candidateCount;col++){const values=rows.slice(0,Math.min(rows.length,12)).map(row=>String(row[col]??"").trim()).filter(Boolean);if(values.length>=2&&values.filter(value=>phonePattern.test(value)&&/[0-9٠-٩۰-۹]/.test(value)).length/values.length>=0.7){phoneIndex=col;break;}}}
    const column=headerIndex>=0?headerIndex:Math.max(0,first.findIndex(v=>String(v).trim()!==""));
    const start=headerIndex>=0?1:0;
    const parsed=rows.slice(start).map(row=>({name:String(row[column]??"").replace(/\s+/g," ").trim(),phone:phoneIndex>=0?String(row[phoneIndex]??"").trim():""})).filter(entry=>entry.name);
@@ -79,7 +80,7 @@ export function AttendancePage() {
   if(!selected)return;
   const previous=selected;const presentAt=status==="present"?new Date().toISOString():null;setSelected({...selected,entries:selected.entries.map(e=>e.id===entry.id?{...e,status,presentAt}:e)});
   if(entry.id.startsWith("local-")||!navigator.onLine){setMessage("تم حفظ الحالة على هذا الجهاز.");return;}
-  try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:entry.id,status})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر حفظ الحالة");await refreshVisits();}
+  try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:entry.id,status})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر حفظ الحالة");if(data.entry)setSelected(current=>current?{...current,entries:current.entries.map(e=>e.id===entry.id?{...e,presentAt:data.entry.presentAt}:e)}:current);await refreshVisits();}
   catch(error){if(!navigator.onLine||error instanceof TypeError){setMessage("تم حفظ التغيير على هذا الجهاز دون اتصال. سيظل محليًا حتى تعود للشبكة.");return;}setSelected(previous);const text=error instanceof Error?error.message:"تعذّر حفظ الحالة";setMessage(text);}
  }
  async function resetAllStatuses(){
@@ -111,7 +112,7 @@ export function AttendancePage() {
  }
  return <main className={"attendance-page"+(nightMode?" night-mode":"")} dir="rtl">
   <div className="attendance-wrap">
-   <header className="attendance-header"><span className={"attendance-kicker "+(isOnline?"":"offline-badge")}>{isOnline?"متصل بالإنترنت":"وضع عدم الاتصال"}</span><div><span className="attendance-kicker">جامعة العاصمة</span><h1>كشف الحضور</h1><p>إدارة حضور الزيارات العسكرية</p></div><button className="attendance-back" type="button" onClick={toggleNightMode}>{nightMode?"☀️ الوضع النهاري":"🌙 الوضع الليلي"}</button></header>
+   <header className="attendance-header"><span className={"attendance-kicker "+(isOnline?"":"offline-badge")}>{isOnline?"متصل بالإنترنت":"وضع عدم الاتصال"}</span><div><span className="attendance-kicker">جامعة العاصمة</span><h1>كشف الحضور</h1><p>إدارة حضور الزيارات العسكرية</p></div><button className="attendance-back" type="button" onClick={toggleNightMode}>{nightMode?<><Sun size={16}/> الوضع النهاري</>:<><Moon size={16}/> الوضع الليلي</>}</button></header>
    {message&&<div className="attendance-message" role="alert">{message}</div>}
    {!selected&&<section className="attendance-upload">
     <div className="attendance-section-title"><FileSpreadsheet size={22}/><div><h2>إنشاء كشف زيارة جديد</h2><p>ارفع ملف Excel يحتوي على الأسماء في عمود واحد.</p></div></div>
