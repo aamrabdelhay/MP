@@ -1977,3 +1977,29 @@ textarea:focus-visible {
  .attendance-row-action, .attendance-phone { min-width: 31px; min-height: 31px; }
  .attendance-tools .attendance-orange { width: 100%; }
 }
+
+
+/* Attendance night mode and attendance timestamps */
+.attendance-tool-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.attendance-reset{display:inline-flex;align-items:center;justify-content:center;border:1px solid #d6a0a0;border-radius:10px;padding:11px 14px;background:#fff2f2;color:#a52d2d;font:inherit;font-weight:800;cursor:pointer}
+.attendance-present-time{display:block;margin-top:4px;font-size:11px;font-weight:700;color:#177547}
+.attendance-page.night-mode{background:#101722;color:#e8edf4;color-scheme:dark}
+.night-mode .attendance-header h1,.night-mode .attendance-section-title h2,.night-mode .attendance-roster-head h2{color:#edf3fa}
+.night-mode .attendance-header p,.night-mode .attendance-section-title p,.night-mode .attendance-tools,.night-mode .attendance-security{color:#aab7c8}
+.night-mode .attendance-upload,.night-mode .attendance-roster,.night-mode .attendance-visits{background:#182333;border-color:#2c3b4f;box-shadow:0 8px 28px #0003}
+.night-mode .attendance-label input,.night-mode .attendance-add input,.night-mode .attendance-search input{background:#111b28;color:#f2f5fa;border-color:#39485c}
+.night-mode .attendance-file{background:#2a241e;border-color:#80582f;color:#f3bc7d}
+.night-mode .attendance-back,.night-mode .attendance-visit-card{background:#202d3e;border-color:#3a4a60;color:#e5edf7}
+.night-mode .attendance-row{background:#202d3e;border-color:#3a4a60;color:#e5edf7}
+.night-mode .attendance-row.row-present{background:#15382b;border-color:#286448}
+.night-mode .attendance-row.row-absent{background:#3b2227;border-color:#714047}
+.night-mode .attendance-row.row-moving{background:#3a2c1c;border-color:#72532e}
+.night-mode .attendance-row.row-joker{background:#30243e;border-color:#5e477b}
+.night-mode .attendance-markers button,.night-mode .attendance-phone,.night-mode .attendance-row-action{background:#172231;border-color:#46566b;color:#dbe6f4}
+.night-mode .attendance-phone{color:#78dfaa;border-color:#286448;background:#15382b}
+.night-mode .attendance-present-time{color:#79e0a7}
+.night-mode .attendance-reset{background:#3b2227;border-color:#714047;color:#ffb6b6}
+.night-mode .attendance-number{color:#b6c2d1}
+.night-mode .attendance-visit-open small,.night-mode .visit-mini-counts b{color:#b6c2d1}
+.night-mode .attendance-empty{color:#b6c2d1}
+@media(max-width:560px){.attendance-tool-actions{width:100%}.attendance-tool-actions button{flex:1}.attendance-header .attendance-back{align-self:flex-start}}
