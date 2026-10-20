@@ -8,7 +8,6 @@ import * as XLSX from "xlsx";
 type Visit = { id: string; title: string; total: number; present: number; absent: number; moving: number; joker: number; unmarked: number; createdAt?: string };
 type Entry = { id: string; name: string; phone?: string | null; status: "present" | "absent" | "moving" | "joker" | "unmarked"; position: number; statusChangedAt?: string | Date | null };
 type Detail = { visit: Visit; entries: Entry[] };
-const statusPriority:Record<Entry["status"],number>={joker:0,present:1,moving:2,unmarked:3,absent:4};
 
 export function AttendancePage() {
  const router = useRouter();
