@@ -18,6 +18,11 @@ export async function GET(_request:NextRequest,context:{params:Promise<{id:strin
 export async function PATCH(request:NextRequest,context:{params:Promise<{id:string}>}) {
  const {id}=await context.params; if(!validId.safeParse(id).success) return jsonNoStore({error:"الكشف غير موجود."},{status:404});
  let body:unknown; try {body=await request.json();} catch {return jsonNoStore({error:"البيانات غير صحيحة."},{status:400});}
+ const reset=z.object({resetAll:z.literal(true)}).safeParse(body);
+ try {
+  const db=getDb(); await db.execute(sql`ALTER TABLE attendance_entries ADD COLUMN IF NOT EXISTS status_changed_at TIMESTAMPTZ`);
+  if(reset.success){await db.execute(sql`UPDATE attendance_entries SET status='unmarked',status_changed_at=NULL WHERE visit_id=${id}::uuid`);return jsonNoStore({success:true,resetAll:true});}
+ } catch(error) {console.error("Attendance reset failed",error);return jsonNoStore({error:"تعذّرت إعادة العلامات."},{status:500});}
  const parsed=z.object({entryId:z.string().uuid(),status:z.enum(["unmarked","present","absent","moving","joker"]).optional(),name:z.string().trim().min(1).max(180).optional(),phone:z.string().trim().max(40).optional(),position:z.number().int().min(0).max(100000).optional()}).refine(v=>v.status!==undefined||v.name!==undefined||v.phone!==undefined||v.position!==undefined).safeParse(body);
  if(!parsed.success) return jsonNoStore({error:"اختيار الحالة غير صحيح."},{status:400});
  try {
