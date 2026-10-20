@@ -2012,3 +2012,5 @@ textarea:focus-visible {
 .night-mode .attendance-visit-open{color:#e7eef8}
 .night-mode .attendance-visit-open small,.night-mode .visit-mini-counts b{color:#a3b1c4}
 @media(max-width:560px){.attendance-theme-toggle{align-self:flex-start}.attendance-theme-toggle span{font-size:12px}.attendance-reset{width:100%}}
+
+.attendance-tools .attendance-reset{margin-top:0}
