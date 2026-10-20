@@ -23,9 +23,10 @@ export function AttendancePage() {
  const [fileName,setFileName]=useState("");
  const [isOnline,setIsOnline]=useState(true);
  const [darkMode,setDarkMode]=useState(false);
+ const [themeLoaded,setThemeLoaded]=useState(false);
  useEffect(()=>{
   setIsOnline(navigator.onLine);
-  setDarkMode(localStorage.getItem("attendance-dark-mode")==="true");
+  setDarkMode(localStorage.getItem("attendance-dark-mode")==="true");setThemeLoaded(true);
   const online=()=>setIsOnline(true),offline=()=>setIsOnline(false);
   window.addEventListener("online",online);window.addEventListener("offline",offline);
   if("serviceWorker" in navigator) void navigator.serviceWorker.register("/sw.js").catch(()=>{});
@@ -45,7 +46,7 @@ export function AttendancePage() {
  },[]);
  useEffect(()=>{void refreshVisits();},[refreshVisits]);
  useEffect(()=>{const id=new URLSearchParams(window.location.search).get("id");if(id)void loadVisit(id);},[loadVisit]);
- useEffect(()=>{try{localStorage.setItem("attendance-dark-mode",String(darkMode));}catch{}},[darkMode]);
+ useEffect(()=>{if(themeLoaded)try{localStorage.setItem("attendance-dark-mode",String(darkMode));}catch{}},[darkMode,themeLoaded]);
  const counts=useMemo(()=>{const entries=selected?.entries||[];return {present:entries.filter(e=>e.status==="present").length,absent:entries.filter(e=>e.status==="absent").length,moving:entries.filter(e=>e.status==="moving").length,joker:entries.filter(e=>e.status==="joker").length,unmarked:entries.filter(e=>e.status==="unmarked").length};},[selected]);
  const filtered=useMemo(()=>{const q=search.trim().toLocaleLowerCase("ar");const priority:Record<Entry["status"],number>={joker:0,present:1,moving:2,unmarked:3,absent:4};return (selected?.entries||[]).filter(e=>e.name.toLocaleLowerCase("ar").includes(q)).sort((a,b)=>priority[a.status]-priority[b.status]||a.name.localeCompare(b.name,"ar",{sensitivity:"base"})||a.position-b.position);},[selected,search]);
  async function chooseFile(file?:File){
