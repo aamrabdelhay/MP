@@ -59,7 +59,8 @@ export function AttendancePage() {
    const first=rows[0].map(v=>String(v??"").trim());
    const normalizeHeader=(value:string)=>value.toLocaleLowerCase("ar").trim().replaceAll("_"," ").replaceAll("ـ"," ");
    const headerIndex=first.findIndex(v=>/^(الاسم|اسم الطالب|اسم الطالبة|اسم الطالب\/ة|اسم الطالب بالكامل|الاسم بالكامل|اسم المتدرب|name|full name|student name)$/i.test(normalizeHeader(v)));
-   const phoneIndex=first.findIndex(v=>/(phone|mobile|telephone|tel|رقم.*(هاتف|تليفون|موبايل|جوال)|هاتف|تليفون|موبايل|جوال)/i.test(normalizeHeader(v)));
+   let phoneIndex=first.findIndex(v=>/(phone|mobile|telephone|tel|رقم.*(هاتف|تليفون|موبايل|جوال)|هاتف|تليفون|موبايل|جوال|رقم.*(اتصال|محمول))/i.test(normalizeHeader(v)));
+   if(phoneIndex<0&&headerIndex<0){const phonePattern=/^[+()\d٠-٩۰-۹ .-]{7,20}$/;const candidateCount=Math.max(0,...rows.map(row=>row.length));for(let col=1;col<candidateCount;col++){const values=rows.slice(0,Math.min(rows.length,12)).map(row=>String(row[col]??"").trim()).filter(Boolean);if(values.length>=2&&values.filter(value=>phonePattern.test(value)&&/[0-9٠-٩۰-۹]/.test(value)).length/values.length>=0.7){phoneIndex=col;break;}}}
    const column=headerIndex>=0?headerIndex:Math.max(0,first.findIndex(v=>String(v).trim()!==""));
    const start=headerIndex>=0?1:0;
    const parsed=rows.slice(start).map(row=>({name:String(row[column]??"").replace(/\s+/g," ").trim(),phone:phoneIndex>=0?String(row[phoneIndex]??"").trim():""})).filter(entry=>entry.name);
