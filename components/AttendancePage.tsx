@@ -73,7 +73,7 @@ export function AttendancePage() {
    if(phoneIndex<0&&headerIndex>=0){
     const dataRows=rows.slice(start);
     const candidates=first.map((_,index)=>index).filter(index=>index!==column);
-    phoneIndex=candidates.find(index=>{const values=dataRows.map(row=>normalizePhoneNumber(row[index])).filter(Boolean);return values.length>=2&&values.filter(value=>/^(?:20)?0?1[0125]\\d{8}$/.test(value.replace(/\\D/g,""))).length/values.length>=0.7;})??-1;
+    phoneIndex=candidates.find(index=>{const values=dataRows.map(row=>normalizePhoneNumber(row[index])).filter(Boolean);return values.length>=2&&values.filter(value=>/^(?:20)?0?1[0125]\d{8}$/.test(value.replace(/\D/g,""))).length/values.length>=0.7;})??-1;
    }
    const parsed=rows.slice(start).map(row=>({name:String(row[column]??"").replace(/\s+/g," ").trim(),phone:phoneIndex>=0?normalizePhoneNumber(row[phoneIndex]):""})).filter(entry=>entry.name);
    if(!parsed.length)throw new Error("لم أجد أسماء في العمود الأول. تأكد أن الأسماء في عمود واحد.");
