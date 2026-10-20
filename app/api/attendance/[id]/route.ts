@@ -9,19 +9,28 @@ const validId=z.string().uuid();
 export async function GET(_request:NextRequest,context:{params:Promise<{id:string}>}) {
  const {id}=await context.params; if(!validId.safeParse(id).success) return jsonNoStore({error:"الكشف غير موجود."},{status:404});
  try {
-  const db=getDb(); const visits=await db.execute(sql`SELECT id,title,created_at AS "createdAt" FROM attendance_visits WHERE id=${id}::uuid LIMIT 1`);
+  const db=getDb(); await db.execute(sql`ALTER TABLE attendance_entries ADD COLUMN IF NOT EXISTS status_changed_at timestamptz`); const visits=await db.execute(sql`SELECT id,title,created_at AS "createdAt" FROM attendance_visits WHERE id=${id}::uuid LIMIT 1`);
   if(!visits.length) return jsonNoStore({error:"الكشف غير موجود."},{status:404});
-  const entries=await db.execute(sql`SELECT id,full_name AS name,phone_number AS phone,status,position FROM attendance_entries WHERE visit_id=${id}::uuid ORDER BY position,created_at`);
+  const entries=await db.execute(sql`SELECT id,full_name AS name,phone_number AS phone,status,position,status_changed_at AS "statusChangedAt" FROM attendance_entries WHERE visit_id=${id}::uuid ORDER BY position,created_at`);
   return jsonNoStore({visit:visits[0],entries});
  } catch(error) { console.error("Attendance detail failed",error); return jsonNoStore({error:"تعذّر تحميل الأسماء."},{status:500}); }
 }
 export async function PATCH(request:NextRequest,context:{params:Promise<{id:string}>}) {
  const {id}=await context.params; if(!validId.safeParse(id).success) return jsonNoStore({error:"الكشف غير موجود."},{status:404});
  let body:unknown; try {body=await request.json();} catch {return jsonNoStore({error:"البيانات غير صحيحة."},{status:400});}
+ if(body&&typeof body==="object"&&"resetAll" in body&&(body as {resetAll?:unknown}).resetAll===true){
+  try {
+   await getDb().execute(sql`ALTER TABLE attendance_entries ADD COLUMN IF NOT EXISTS status_changed_at timestamptz`);
+   await getDb().execute(sql`UPDATE attendance_entries SET status=$$unmarked$$,status_changed_at=NULL WHERE visit_id=${id}::uuid`);
+   return jsonNoStore({success:true,resetAll:true});
+  } catch(error) { console.error("Attendance reset failed",error); return jsonNoStore({error:"تعذّرت إعادة العلامات."},{status:500}); }
+ }
  const parsed=z.object({entryId:z.string().uuid(),status:z.enum(["unmarked","present","absent","moving","joker"]).optional(),name:z.string().trim().min(1).max(180).optional(),phone:z.string().trim().max(40).optional(),position:z.number().int().min(0).max(100000).optional()}).refine(v=>v.status!==undefined||v.name!==undefined||v.phone!==undefined||v.position!==undefined).safeParse(body);
  if(!parsed.success) return jsonNoStore({error:"اختيار الحالة غير صحيح."},{status:400});
  try {
-  const result=await getDb().execute(sql`UPDATE attendance_entries SET status=COALESCE(${parsed.data.status??null},status), full_name=COALESCE(${parsed.data.name?.replace(/\\s+/g," ").trim()??null},full_name), phone_number=COALESCE(${parsed.data.phone??null},phone_number), position=COALESCE(${parsed.data.position??null},position) WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position`);
+  await getDb().execute(sql`ALTER TABLE attendance_entries ADD COLUMN IF NOT EXISTS status_changed_at timestamptz`);
+  const statusTimestamp=parsed.data.status===undefined?null:(parsed.data.status==="present"?new Date():null);
+  const result=await getDb().execute(sql`UPDATE attendance_entries SET status=COALESCE(${parsed.data.status??null},status), status_changed_at=CASE WHEN ${parsed.data.status??null} IS NULL THEN status_changed_at ELSE ${statusTimestamp} END, full_name=COALESCE(${parsed.data.name?.replace(/\\s+/g," ").trim()??null},full_name), phone_number=COALESCE(${parsed.data.phone??null},phone_number), position=COALESCE(${parsed.data.position??null},position) WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position,status_changed_at AS "statusChangedAt"` );
   if(!result.length) return jsonNoStore({error:"الاسم غير موجود في هذا الكشف."},{status:404});
   return jsonNoStore({entry:result[0]});
  } catch(error) {console.error("Attendance status update failed",error);return jsonNoStore({error:"تعذّر حفظ الحالة."},{status:500});}

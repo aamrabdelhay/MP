@@ -1977,3 +1977,37 @@ textarea:focus-visible {
  .attendance-row-action, .attendance-phone { min-width: 31px; min-height: 31px; }
  .attendance-tools .attendance-orange { width: 100%; }
 }
+
+/* Attendance enhancements: timestamps, numbering, reset and night mode */
+.attendance-header{flex-wrap:wrap;align-items:center}
+.attendance-theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #d7dee7;border-radius:10px;padding:9px 12px;background:#fff;color:#334155;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.attendance-reset{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid #e4c6a4;border-radius:10px;padding:10px 14px;background:#fff8ef;color:#995315;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+.attendance-reset:disabled{opacity:.55;cursor:wait}
+.attendance-number{display:inline-flex;align-items:center;justify-content:center;min-width:25px;font-variant-numeric:tabular-nums}
+.attendance-number.joker-number{color:#7252a3;font-size:19px;font-weight:900}
+.attendance-present-time{display:block;color:#177547;font-size:11px;font-weight:800;line-height:1.5;margin-top:2px}
+.attendance-page.dark-mode{color:#e7edf5;background:#101722}
+.dark-mode .attendance-header h1,.dark-mode .attendance-section-title h2,.dark-mode .attendance-roster-head h2{color:#edf3fb}
+.dark-mode .attendance-header p,.dark-mode .attendance-section-title p,.dark-mode .attendance-tools,.dark-mode .attendance-empty,.dark-mode .attendance-security{color:#a4b2c5}
+.dark-mode .attendance-upload,.dark-mode .attendance-roster,.dark-mode .attendance-visits{background:#192433;border-color:#2c394b;box-shadow:0 8px 28px #0003}
+.dark-mode .attendance-label input,.dark-mode .attendance-add input,.dark-mode .attendance-search input{background:#101a28;color:#eef4fb;border-color:#354459}
+.dark-mode .attendance-file{background:#2a241d;border-color:#805a34;color:#f0bc80}
+.dark-mode .attendance-back,.dark-mode .attendance-theme-toggle,.dark-mode .attendance-row-action{background:#202d3e;color:#e1eaf6;border-color:#3b4a5e}
+.dark-mode .attendance-search{border-color:#354459;color:#a4b2c5}
+.dark-mode .attendance-row,.dark-mode .attendance-visit-card{background:#202b3a;border-color:#354256;color:#e7edf5}
+.dark-mode .attendance-row.row-present{background:#19392d;border-color:#286449}
+.dark-mode .attendance-row.row-absent{background:#402528;border-color:#71383d}
+.dark-mode .attendance-row.row-moving{background:#3c3022;border-color:#78552e}
+.dark-mode .attendance-row.row-joker{background:#30253e;border-color:#5e4678}
+.dark-mode .attendance-markers button{background:#263447;border-color:#435268;color:#c5d0df}
+.dark-mode .attendance-phone{background:#17382d;border-color:#2c6c50;color:#82ddb0}
+.dark-mode .attendance-delete{background:#3b2428;border-color:#704047;color:#ffaaaa}
+.dark-mode .attendance-visit-open small,.dark-mode .visit-mini-counts b{color:#adbacb}
+.dark-mode .stat-present{background:#19392d;border-color:#286449;color:#9de2bc}
+.dark-mode .stat-absent{background:#402528;border-color:#71383d;color:#ffaaaa}
+.dark-mode .stat-unmarked{background:#242f3e;border-color:#3c4b5d;color:#c2ccda}
+.dark-mode .stat-moving{background:#3c3022;border-color:#78552e;color:#ffc889}
+.dark-mode .stat-joker{background:#30253e;border-color:#5e4678;color:#d8b9ff}
+.dark-mode .attendance-message{background:#402824;border-color:#754238;color:#ffc5b9}
+.dark-mode .attendance-reset{background:#30271f;border-color:#78552e;color:#ffc889}
+@media(max-width:560px){.attendance-header{align-items:flex-start}.attendance-theme-toggle span{display:none}.attendance-reset{width:100%}}
