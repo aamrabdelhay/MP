@@ -9,9 +9,9 @@ const validId=z.string().uuid();
 export async function GET(_request:NextRequest,context:{params:Promise<{id:string}>}) {
  const {id}=await context.params; if(!validId.safeParse(id).success) return jsonNoStore({error:"الكشف غير موجود."},{status:404});
  try {
-  const db=getDb(); const visits=await db.execute(sql`SELECT id,title,created_at AS "createdAt" FROM attendance_visits WHERE id=${id}::uuid LIMIT 1`);
+  const db=getDb(); await db.execute(sql`ALTER TABLE attendance_entries ADD COLUMN IF NOT EXISTS status_changed_at TIMESTAMPTZ`); const visits=await db.execute(sql`SELECT id,title,created_at AS "createdAt" FROM attendance_visits WHERE id=${id}::uuid LIMIT 1`);
   if(!visits.length) return jsonNoStore({error:"الكشف غير موجود."},{status:404});
-  const entries=await db.execute(sql`SELECT id,full_name AS name,phone_number AS phone,status,position FROM attendance_entries WHERE visit_id=${id}::uuid ORDER BY position,created_at`);
+  const entries=await db.execute(sql`SELECT id,full_name AS name,phone_number AS phone,status,position,status_changed_at AS "presentAt" FROM attendance_entries WHERE visit_id=${id}::uuid ORDER BY position,created_at`);
   return jsonNoStore({visit:visits[0],entries});
  } catch(error) { console.error("Attendance detail failed",error); return jsonNoStore({error:"تعذّر تحميل الأسماء."},{status:500}); }
 }
