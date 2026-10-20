@@ -6,7 +6,7 @@ import { ArrowDown, ArrowRight, ArrowUp, Check, Circle, Copy, FileSpreadsheet, N
 import * as XLSX from "xlsx";
 
 type Visit = { id: string; title: string; total: number; present: number; absent: number; moving: number; joker: number; unmarked: number; createdAt?: string };
-type Entry = { id: string; name: string; phone?: string | null; status: "present" | "absent" | "moving" | "joker" | "unmarked"; position: number };
+type Entry = { id: string; name: string; phone?: string | null; presentAt?: string | null; status: "present" | "absent" | "moving" | "joker" | "unmarked"; position: number };
 type Detail = { visit: Visit; entries: Entry[] };
 
 export function AttendancePage() {
@@ -22,7 +22,9 @@ export function AttendancePage() {
  const [names,setNames]=useState<Array<{name:string;phone:string}>>([]);
  const [fileName,setFileName]=useState("");
  const [isOnline,setIsOnline]=useState(true);
+ const [nightMode,setNightMode]=useState(false);
  useEffect(()=>{
+  setNightMode(localStorage.getItem("attendance-night-mode")==="true");
   setIsOnline(navigator.onLine);
   const online=()=>setIsOnline(true),offline=()=>setIsOnline(false);
   window.addEventListener("online",online);window.addEventListener("offline",offline);
@@ -53,9 +55,9 @@ export function AttendancePage() {
    const rows=XLSX.utils.sheet_to_json<unknown[]>(sheet,{header:1,blankrows:false,defval:"",raw:false});
    if(!rows.length)throw new Error("الملف لا يحتوي على أسماء.");
    const first=rows[0].map(v=>String(v??"").trim());
-   const normalizeHeader=(value:string)=>value.toLocaleLowerCase("ar").trim().replaceAll("_"," ").replaceAll("ـ"," ");
+   const normalizeHeader=(value:string)=>value.toLocaleLowerCase("ar").trim().replaceAll("_"," ").replaceAll("ـ"," ").replace(/\s+/g," ");
    const headerIndex=first.findIndex(v=>/^(الاسم|اسم الطالب|اسم الطالبة|اسم الطالب\/ة|اسم الطالب بالكامل|الاسم بالكامل|اسم المتدرب|name|full name|student name)$/i.test(normalizeHeader(v)));
-   const phoneIndex=first.findIndex(v=>/(phone|mobile|telephone|tel|رقم.*(هاتف|تليفون|موبايل|جوال)|هاتف|تليفون|موبايل|جوال)/i.test(normalizeHeader(v)));
+   const phoneIndex=first.findIndex(v=>/(phone|mobile|telephone|tel|رقم.*(هاتف|تليفون|موبايل|جوال)|هاتف|تليفون|موبايل|جوال|رقم.*(اتصال|محمول))/i.test(normalizeHeader(v)));
    const column=headerIndex>=0?headerIndex:Math.max(0,first.findIndex(v=>String(v).trim()!==""));
    const start=headerIndex>=0?1:0;
    const parsed=rows.slice(start).map(row=>({name:String(row[column]??"").replace(/\s+/g," ").trim(),phone:phoneIndex>=0?String(row[phoneIndex]??"").trim():""})).filter(entry=>entry.name);
@@ -75,11 +77,19 @@ export function AttendancePage() {
  }
  async function changeStatus(entry:Entry,status:Entry["status"]){
   if(!selected)return;
-  const previous=selected;setSelected({...selected,entries:selected.entries.map(e=>e.id===entry.id?{...e,status}:e)});
+  const previous=selected;const presentAt=status==="present"?new Date().toISOString():null;setSelected({...selected,entries:selected.entries.map(e=>e.id===entry.id?{...e,status,presentAt}:e)});
   if(entry.id.startsWith("local-")||!navigator.onLine){setMessage("تم حفظ الحالة على هذا الجهاز.");return;}
   try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:entry.id,status})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر حفظ الحالة");await refreshVisits();}
   catch(error){if(!navigator.onLine||error instanceof TypeError){setMessage("تم حفظ التغيير على هذا الجهاز دون اتصال. سيظل محليًا حتى تعود للشبكة.");return;}setSelected(previous);const text=error instanceof Error?error.message:"تعذّر حفظ الحالة";setMessage(text);}
  }
+ async function resetAllStatuses(){
+  if(!selected||!window.confirm("هل تريد إعادة جميع العلامات إلى لم يُحدد؟"))return;
+  const previous=selected;setSelected({...selected,entries:selected.entries.map(e=>({...e,status:"unmarked" as const,presentAt:null}))});
+  if(selected.visit.id.startsWith("local-")||!navigator.onLine){setMessage("تمت إعادة جميع العلامات إلى لم يُحدد على هذا الجهاز.");return;}
+  try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({resetAll:true})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّرت إعادة العلامات");await loadVisit(selected.visit.id);await refreshVisits();setMessage("تمت إعادة جميع العلامات إلى لم يُحدد.");}
+  catch(error){if(!navigator.onLine||error instanceof TypeError){setMessage("تمت إعادة العلامات محليًا دون اتصال.");return;}setSelected(previous);setMessage(error instanceof Error?error.message:"تعذّرت إعادة العلامات.");}
+ }
+ function toggleNightMode(){setNightMode(current=>{const next=!current;localStorage.setItem("attendance-night-mode",String(next));return next;});}
  async function copyCounts(){if(!selected)return;const text=`الحضور: ${counts.present}\nالغياب: ${counts.absent}\nفي الطريق: ${counts.moving}\nالجوكر: ${counts.joker}\nلم يُحدد: ${counts.unmarked}`;try{await navigator.clipboard.writeText(text);setMessage("تم نسخ ملخص الحالات.");}catch{setMessage(text);}}
  async function deleteVisit(visit:Visit){
   if(!window.confirm(`هل أنت متأكد من حذف كشف "${visit.title}"؟ سيتم حذف جميع الأسماء وحالات الحضور التابعة له نهائيًا.`))return;
@@ -99,9 +109,9 @@ export function AttendancePage() {
   catch(error){const text=error instanceof Error?error.message:"تعذّر إضافة الاسم";setMessage(text);}
   finally{setBusy(false);}
  }
- return <main className="attendance-page" dir="rtl">
+ return <main className={"attendance-page"+(nightMode?" night-mode":"")} dir="rtl">
   <div className="attendance-wrap">
-   <header className="attendance-header"><span className={"attendance-kicker "+(isOnline?"":"offline-badge")}>{isOnline?"متصل بالإنترنت":"وضع عدم الاتصال"}</span><div><span className="attendance-kicker">جامعة العاصمة</span><h1>كشف الحضور</h1><p>إدارة حضور الزيارات العسكرية</p></div></header>
+   <header className="attendance-header"><span className={"attendance-kicker "+(isOnline?"":"offline-badge")}>{isOnline?"متصل بالإنترنت":"وضع عدم الاتصال"}</span><div><span className="attendance-kicker">جامعة العاصمة</span><h1>كشف الحضور</h1><p>إدارة حضور الزيارات العسكرية</p></div><button className="attendance-back" type="button" onClick={toggleNightMode}>{nightMode?"☀️ الوضع النهاري":"🌙 الوضع الليلي"}</button></header>
    {message&&<div className="attendance-message" role="alert">{message}</div>}
    {!selected&&<section className="attendance-upload">
     <div className="attendance-section-title"><FileSpreadsheet size={22}/><div><h2>إنشاء كشف زيارة جديد</h2><p>ارفع ملف Excel يحتوي على الأسماء في عمود واحد.</p></div></div>
@@ -119,9 +129,9 @@ export function AttendancePage() {
      <div className="attendance-stat stat-joker"><Star size={19}/><span>جوكر (غير محسوب)</span><strong>{counts.joker}</strong></div>
      <div className="attendance-stat stat-unmarked"><Circle size={19}/><span>لم يُحدد</span><strong>{counts.unmarked}</strong></div>
     </div>
-    <div className="attendance-tools"><label className="attendance-search"><Search size={18}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث بالاسم…"/></label><span>{filtered.length} ظاهر · {selected.entries.length-counts.joker} اسم محسوب من إجمالي الكشف</span><button className="attendance-orange" type="button" onClick={()=>void copyCounts()}><Copy size={16}/> كوبي الحالة</button></div>
+    <div className="attendance-tools"><label className="attendance-search"><Search size={18}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث بالاسم…"/></label><span>{filtered.length} ظاهر · {selected.entries.length-counts.joker} اسم محسوب من إجمالي الكشف</span><div className="attendance-tool-actions"><button className="attendance-orange" type="button" onClick={()=>void copyCounts()}><Copy size={16}/> كوبي الحالة</button><button className="attendance-reset" type="button" onClick={()=>void resetAllStatuses()}>إعادة كل العلامات</button></div></div>
     <form className="attendance-add" onSubmit={e=>{e.preventDefault();void addName();}}><input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="إضافة اسم جديد إلى الكشف" maxLength={180}/><button disabled={busy||!newName.trim()}><UserPlus size={18}/> إضافة اسم</button></form>
-    <div className="attendance-list">{filtered.map((entry,index)=><div className={"attendance-row row-"+entry.status} key={entry.id}><span className="attendance-number">{index+1}</span><span className="attendance-name">{entry.name}</span>{entry.phone?<a className="attendance-phone" href={"tel:"+entry.phone.replace(/[^0-9+]/g,"")} aria-label={"اتصال بـ "+entry.name} title={"اتصال بـ "+entry.name}><Phone size={17}/></a>:<button type="button" className="attendance-phone" onClick={()=>void editPhone(entry)} aria-label={"إضافة رقم هاتف لـ "+entry.name} title="أضف رقم الهاتف لتفعيل الاتصال"><Phone size={17}/></button>}<button type="button" className="attendance-row-action" title="تعديل الاسم ورقم الهاتف" onClick={()=>void editName(entry)}><Pencil size={15}/></button><button type="button" className="attendance-row-action" title="تحريك لأعلى" onClick={()=>void moveName(entry,-1)}><ArrowUp size={15}/></button><button type="button" className="attendance-row-action" title="تحريك لأسفل" onClick={()=>void moveName(entry,1)}><ArrowDown size={15}/></button><button type="button" className="attendance-row-action" title="حذف الاسم" onClick={()=>void deleteName(entry)}><Trash2 size={15}/></button><div className="attendance-markers" aria-label={"حالة "+entry.name}><button title="حضور" aria-label={"تسجيل حضور "+entry.name} className={entry.status==="present"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="present"?"unmarked":"present")}><Check size={18}/></button><button title="غياب" aria-label={"تسجيل غياب "+entry.name} className={entry.status==="absent"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="absent"?"unmarked":"absent")}><X size={18}/></button><button title="في الطريق للمكان" aria-label={"تسجيل أن "+entry.name+" في الطريق للمكان"} className={entry.status==="moving"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="moving"?"unmarked":"moving")}><Navigation size={17}/></button><button title="جوكر — لا يُحتسب ضمن العدد" aria-label={"تحديد "+entry.name+" كجوكر غير محسوب"} className={entry.status==="joker"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="joker"?"unmarked":"joker")}><Star size={16}/></button><button title="لم يُحدد" aria-label={"إلغاء تحديد "+entry.name} className={entry.status==="unmarked"?"marker-active":""} onClick={()=>void changeStatus(entry,"unmarked")}><Circle size={16}/></button></div></div>)}
+    <div className="attendance-list">{filtered.map((entry,index)=><div className={"attendance-row row-"+entry.status} key={entry.id}><span className="attendance-number">{entry.status==="joker"?"★":filtered.slice(0,index).filter(e=>e.status!=="joker").length+1}</span><span className="attendance-name">{entry.name}{entry.status==="present"&&entry.presentAt&&<small className="attendance-present-time">حضر الساعة {new Intl.DateTimeFormat("ar-EG",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true,timeZone:"Africa/Cairo"}).format(new Date(entry.presentAt))}</small>}</span>{entry.phone?<a className="attendance-phone" href={"tel:"+entry.phone.replace(/[٠-٩۰-۹]/g,d=>String("٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹".indexOf(d)%10)).replace(/[^0-9+]/g,"")} aria-label={"اتصال بـ "+entry.name} title={"اتصال بـ "+entry.name}><Phone size={17}/></a>:<button type="button" className="attendance-phone" onClick={()=>void editPhone(entry)} aria-label={"إضافة رقم هاتف لـ "+entry.name} title="أضف رقم الهاتف لتفعيل الاتصال"><Phone size={17}/></button>}<button type="button" className="attendance-row-action" title="تعديل الاسم ورقم الهاتف" onClick={()=>void editName(entry)}><Pencil size={15}/></button><button type="button" className="attendance-row-action" title="تحريك لأعلى" onClick={()=>void moveName(entry,-1)}><ArrowUp size={15}/></button><button type="button" className="attendance-row-action" title="تحريك لأسفل" onClick={()=>void moveName(entry,1)}><ArrowDown size={15}/></button><button type="button" className="attendance-row-action" title="حذف الاسم" onClick={()=>void deleteName(entry)}><Trash2 size={15}/></button><div className="attendance-markers" aria-label={"حالة "+entry.name}><button title="حضور" aria-label={"تسجيل حضور "+entry.name} className={entry.status==="present"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="present"?"unmarked":"present")}><Check size={18}/></button><button title="غياب" aria-label={"تسجيل غياب "+entry.name} className={entry.status==="absent"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="absent"?"unmarked":"absent")}><X size={18}/></button><button title="في الطريق للمكان" aria-label={"تسجيل أن "+entry.name+" في الطريق للمكان"} className={entry.status==="moving"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="moving"?"unmarked":"moving")}><Navigation size={17}/></button><button title="جوكر — لا يُحتسب ضمن العدد" aria-label={"تحديد "+entry.name+" كجوكر غير محسوب"} className={entry.status==="joker"?"marker-active":""} onClick={()=>void changeStatus(entry,entry.status==="joker"?"unmarked":"joker")}><Star size={16}/></button><button title="لم يُحدد" aria-label={"إلغاء تحديد "+entry.name} className={entry.status==="unmarked"?"marker-active":""} onClick={()=>void changeStatus(entry,"unmarked")}><Circle size={16}/></button></div></div>)}
     {filtered.length===0&&<p className="attendance-empty">لا توجد أسماء مطابقة للبحث.</p>}</div>
    </section>}
    {!selected&&<section className="attendance-visits"><div className="attendance-section-title"><h2>كشوف الزيارات المحفوظة</h2></div>
