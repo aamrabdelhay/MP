@@ -43,6 +43,13 @@
       "when": 1792494000000,
       "tag": "0005_attendance_status_changed_at",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792777000000,
+      "tag": "0006_registration_details",
+      "breakpoints": true
     }
   ]
 }
