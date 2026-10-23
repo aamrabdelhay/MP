@@ -13,6 +13,9 @@ export type AdminRequest = {
   phone: string;
   nationalId: string;
   address: string;
+  buildingNumber: string;
+  governorate: string;
+  studyYear: string;
   birthDate: string;
   universityType: "government" | "private";
   status: "new" | "old";
@@ -22,7 +25,7 @@ export type AdminRequest = {
 export type RequestStatus = "new" | "old";
 
 type DisplayField = {
-  key: "fullName" | "college" | "department" | "phone" | "nationalId" | "address" | "birthDate" | "university" | "createdAt";
+  key: "fullName" | "college" | "department" | "studyYear" | "phone" | "nationalId" | "governorate" | "address" | "buildingNumber" | "birthDate" | "university" | "createdAt";
   label: string;
   value: string;
 };
@@ -34,6 +37,9 @@ export function getRequestFields(request: AdminRequest, language: Language, noDe
   phone: string;
   nationalId: string;
   address: string;
+  buildingNumber: string;
+  governorate: string;
+  studyYear: string;
   birthDate: string;
   university: string;
   createdAt: string;
@@ -60,9 +66,12 @@ export function getRequestFields(request: AdminRequest, language: Language, noDe
     { key: "fullName", label: labels.fullName, value: request.fullName },
     { key: "college", label: labels.college, value: request.college },
     { key: "department", label: labels.department, value: request.department?.trim() || noDepartmentLabel },
+    { key: "studyYear", label: labels.studyYear, value: request.studyYear },
     { key: "phone", label: labels.phone, value: request.phone },
     { key: "nationalId", label: labels.nationalId, value: request.nationalId },
+    { key: "governorate", label: labels.governorate, value: request.governorate },
     { key: "address", label: labels.address, value: request.address },
+    { key: "buildingNumber", label: labels.buildingNumber, value: request.buildingNumber },
     { key: "birthDate", label: labels.birthDate, value: dateOfBirth },
     {
       key: "university",
