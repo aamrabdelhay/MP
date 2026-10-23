@@ -100,6 +100,9 @@ const ar: Messages = {
     address: "العنوان",
     birthDate: "تاريخ الميلاد",
     universityType: "اختر الجامعة",
+    studyYear: "الفرقة الدراسية",
+    governorate: "المحافظة",
+    buildingNumber: "رقم العمارة",
   },
   placeholders: {
     fullName: "اكتب اسمك الرباعي",
@@ -208,6 +211,9 @@ const en: Messages = {
     address: "Address",
     birthDate: "Date of birth",
     universityType: "Choose a university",
+    studyYear: "Study year",
+    governorate: "Governorate",
+    buildingNumber: "Building number",
   },
   placeholders: {
     fullName: "Enter your four-part name",
