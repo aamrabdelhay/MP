@@ -269,7 +269,7 @@ export function RegistrationForm() {
             </Field>
 
             <Field id="studyYear" label={t.fields.studyYear} validity={validity.studyYear} {...validityLabels}>
-              <select className="field-control" id="studyYear" name="studyYear" value={form.studyYear} onChange={(event) => updateField("studyYear", event.currentTarget.value)} required aria-required="true" aria-invalid={validity.studyYear === "invalid" && Boolean(form.studyYear)}>
+              <select className="field-control field-control--select" id="studyYear" name="studyYear" value={form.studyYear} onChange={(event) => updateField("studyYear", event.currentTarget.value)} required aria-required="true" aria-invalid={validity.studyYear === "invalid" && Boolean(form.studyYear)}>
                 <option value="">{language === "ar" ? "اختر الفرقة الدراسية" : "Select study year"}</option>
                 <option value="الأولى">{language === "ar" ? "الأولى" : "First"}</option>
                 <option value="الثانية">{language === "ar" ? "الثانية" : "Second"}</option>
@@ -281,7 +281,7 @@ export function RegistrationForm() {
               </select>
             </Field>
             <Field id="governorate" label={t.fields.governorate} validity={validity.governorate} {...validityLabels}>
-              <select className="field-control" id="governorate" name="governorate" value={form.governorate} onChange={(event) => updateField("governorate", event.currentTarget.value)} required aria-required="true" aria-invalid={validity.governorate === "invalid" && Boolean(form.governorate)}>
+              <select className="field-control field-control--select" id="governorate" name="governorate" value={form.governorate} onChange={(event) => updateField("governorate", event.currentTarget.value)} required aria-required="true" aria-invalid={validity.governorate === "invalid" && Boolean(form.governorate)}>
                 <option value="">{language === "ar" ? "اختر المحافظة" : "Select governorate"}</option>
                 <option value="القاهرة">{language === "ar" ? "القاهرة" : "Cairo"}</option>
                 <option value="الجيزة">{language === "ar" ? "الجيزة" : "Giza"}</option>
