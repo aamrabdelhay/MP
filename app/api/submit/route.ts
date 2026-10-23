@@ -42,6 +42,9 @@ export async function POST(request: NextRequest) {
         phone: data.phone,
         nationalId: data.nationalId,
         address: data.address,
+        buildingNumber: data.buildingNumber,
+        governorate: data.governorate,
+        studyYear: data.studyYear,
         birthDate: data.birthDate,
         universityType: data.universityType,
       })
