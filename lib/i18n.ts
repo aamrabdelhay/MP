@@ -70,7 +70,7 @@ type Messages = {
     deleteError: string;
     networkError: string;
     loginRequired: string;
-    fields: Record<"fullName" | "college" | "department" | "phone" | "nationalId" | "address" | "birthDate" | "university" | "createdAt", string>;
+    fields: Record<"fullName" | "college" | "department" | "phone" | "nationalId" | "address" | "buildingNumber" | "governorate" | "studyYear" | "birthDate" | "university" | "createdAt", string>;
     backToSite: string;
     noDepartment: string;
     pageCount: (shown: number, total: number) => string;
@@ -178,6 +178,9 @@ const ar: Messages = {
       phone: "رقم التليفون",
       nationalId: "الرقم القومي",
       address: "العنوان",
+      buildingNumber: "رقم العمارة",
+      governorate: "المحافظة",
+      studyYear: "الفرقة الدراسية",
       birthDate: "تاريخ الميلاد",
       university: "الجامعة",
       createdAt: "تاريخ ووقت التقديم",
@@ -289,6 +292,9 @@ const en: Messages = {
       phone: "Mobile number",
       nationalId: "National ID",
       address: "Address",
+      buildingNumber: "Building number",
+      governorate: "Governorate",
+      studyYear: "Study year",
       birthDate: "Date of birth",
       university: "University",
       createdAt: "Submitted",
