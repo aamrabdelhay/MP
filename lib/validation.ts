@@ -147,7 +147,10 @@ export const registrationSchema = z
     department: z.string().trim().max(160, "اسم القسم أطول من المسموح.").default(""),
     phone: phoneSchema,
     nationalId: nationalIdSchema,
-    address: z.string().trim().min(10, "العنوان يجب ألا يقل عن 10 أحرف.").max(500, "العنوان أطول من المسموح."),
+    address: z.string().trim().min(5, "العنوان يجب ألا يقل عن 5 أحرف.").max(500, "العنوان أطول من المسموح."),
+    buildingNumber: z.string().trim().min(1, "رقم العمارة مطلوب.").max(30, "رقم العمارة أطول من المسموح."),
+    governorate: z.enum(["القاهرة","الجيزة","الإسكندرية","الدقهلية","البحر الأحمر","البحيرة","الفيوم","الغربية","الإسماعيلية","المنوفية","المنيا","القليوبية","الوادي الجديد","السويس","أسوان","أسيوط","بني سويف","بورسعيد","دمياط","الشرقية","جنوب سيناء","كفر الشيخ","مطروح","الأقصر","قنا","شمال سيناء","سوهاج"], { required_error: "اختر المحافظة.", invalid_type_error: "اختر المحافظة." }),
+    studyYear: z.enum(["الأولى", "الثانية", "الثالثة", "الرابعة", "الخامسة", "السادسة", "دراسات عليا"], { required_error: "اختر الفرقة الدراسية.", invalid_type_error: "اختر الفرقة الدراسية." }),
     birthDate: z
       .string()
       .trim()
@@ -177,6 +180,9 @@ export type RegistrationFormDraft = {
   phone: string;
   nationalId: string;
   address: string;
+  buildingNumber: string;
+  governorate: string;
+  studyYear: string;
   birthDate: string;
   universityType: string;
 };
