@@ -24,12 +24,15 @@ const EMPTY_FORM: RegistrationFormDraft = {
   phone: "",
   nationalId: "",
   address: "",
+  buildingNumber: "",
+  governorate: "",
+  studyYear: "",
   birthDate: "",
   universityType: "",
 };
 
 export function RegistrationForm() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [form, setForm] = useState<RegistrationFormDraft>({ ...EMPTY_FORM });
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<FormMessage>(null);
@@ -265,29 +268,55 @@ export function RegistrationForm() {
               />
             </Field>
 
-            <Field
-              id="address"
-              label={t.fields.address}
-              validity={validity.address}
-              {...validityLabels}
-              hint={t.help.address}
-              wide
-            >
-              <textarea
-                className="field-textarea"
-                id="address"
-                aria-describedby="address-hint"
-                name="address"
-                autoComplete="street-address"
-                dir="auto"
-                placeholder={t.placeholders.address}
-                value={form.address}
-                onChange={handleTextChange("address")}
-                maxLength={500}
-                required
-                aria-required="true"
-                aria-invalid={validity.address === "invalid" && Boolean(form.address.trim())}
-              />
+            <Field id="studyYear" label={t.fields.studyYear} validity={validity.studyYear} {...validityLabels}>
+              <select className="field-control" id="studyYear" name="studyYear" value={form.studyYear} onChange={(event) => updateField("studyYear", event.currentTarget.value)} required aria-required="true" aria-invalid={validity.studyYear === "invalid" && Boolean(form.studyYear)}>
+                <option value="">{language === "ar" ? "اختر الفرقة الدراسية" : "Select study year"}</option>
+                <option value="الأولى">{language === "ar" ? "الأولى" : "First"}</option>
+                <option value="الثانية">{language === "ar" ? "الثانية" : "Second"}</option>
+                <option value="الثالثة">{language === "ar" ? "الثالثة" : "Third"}</option>
+                <option value="الرابعة">{language === "ar" ? "الرابعة" : "Fourth"}</option>
+                <option value="الخامسة">{language === "ar" ? "الخامسة" : "Fifth"}</option>
+                <option value="السادسة">{language === "ar" ? "السادسة" : "Sixth"}</option>
+                <option value="دراسات عليا">{language === "ar" ? "دراسات عليا" : "Postgraduate"}</option>
+              </select>
+            </Field>
+            <Field id="governorate" label={t.fields.governorate} validity={validity.governorate} {...validityLabels}>
+              <select className="field-control" id="governorate" name="governorate" value={form.governorate} onChange={(event) => updateField("governorate", event.currentTarget.value)} required aria-required="true" aria-invalid={validity.governorate === "invalid" && Boolean(form.governorate)}>
+                <option value="">{language === "ar" ? "اختر المحافظة" : "Select governorate"}</option>
+                <option value="القاهرة">{language === "ar" ? "القاهرة" : "Cairo"}</option>
+                <option value="الجيزة">{language === "ar" ? "الجيزة" : "Giza"}</option>
+                <option value="الإسكندرية">{language === "ar" ? "الإسكندرية" : "Alexandria"}</option>
+                <option value="الدقهلية">{language === "ar" ? "الدقهلية" : "Dakahlia"}</option>
+                <option value="البحر الأحمر">{language === "ar" ? "البحر الأحمر" : "Red Sea"}</option>
+                <option value="البحيرة">{language === "ar" ? "البحيرة" : "Beheira"}</option>
+                <option value="الفيوم">{language === "ar" ? "الفيوم" : "Fayoum"}</option>
+                <option value="الغربية">{language === "ar" ? "الغربية" : "Gharbia"}</option>
+                <option value="الإسماعيلية">{language === "ar" ? "الإسماعيلية" : "Ismailia"}</option>
+                <option value="المنوفية">{language === "ar" ? "المنوفية" : "Menoufia"}</option>
+                <option value="المنيا">{language === "ar" ? "المنيا" : "Minya"}</option>
+                <option value="القليوبية">{language === "ar" ? "القليوبية" : "Qalyubia"}</option>
+                <option value="الوادي الجديد">{language === "ar" ? "الوادي الجديد" : "New Valley"}</option>
+                <option value="السويس">{language === "ar" ? "السويس" : "Suez"}</option>
+                <option value="أسوان">{language === "ar" ? "أسوان" : "Aswan"}</option>
+                <option value="أسيوط">{language === "ar" ? "أسيوط" : "Assiut"}</option>
+                <option value="بني سويف">{language === "ar" ? "بني سويف" : "Beni Suef"}</option>
+                <option value="بورسعيد">{language === "ar" ? "بورسعيد" : "Port Said"}</option>
+                <option value="دمياط">{language === "ar" ? "دمياط" : "Damietta"}</option>
+                <option value="الشرقية">{language === "ar" ? "الشرقية" : "Sharqia"}</option>
+                <option value="جنوب سيناء">{language === "ar" ? "جنوب سيناء" : "South Sinai"}</option>
+                <option value="كفر الشيخ">{language === "ar" ? "كفر الشيخ" : "Kafr El Sheikh"}</option>
+                <option value="مطروح">{language === "ar" ? "مطروح" : "Matrouh"}</option>
+                <option value="الأقصر">{language === "ar" ? "الأقصر" : "Luxor"}</option>
+                <option value="قنا">{language === "ar" ? "قنا" : "Qena"}</option>
+                <option value="شمال سيناء">{language === "ar" ? "شمال سيناء" : "North Sinai"}</option>
+                <option value="سوهاج">{language === "ar" ? "سوهاج" : "Sohag"}</option>
+              </select>
+            </Field>
+            <Field id="address" label={t.fields.address} validity={validity.address} {...validityLabels} hint={t.help.address}>
+              <textarea className="field-textarea" id="address" name="address" autoComplete="street-address" dir="auto" placeholder={t.placeholders.address} value={form.address} onChange={handleTextChange("address")} maxLength={500} required aria-required="true" aria-invalid={validity.address === "invalid" && Boolean(form.address.trim())} />
+            </Field>
+            <Field id="buildingNumber" label={t.fields.buildingNumber} validity={validity.buildingNumber} {...validityLabels}>
+              <input className="field-control" id="buildingNumber" name="buildingNumber" type="text" dir="auto" placeholder={language === "ar" ? "رقم العمارة" : "Building number"} value={form.buildingNumber} onChange={handleTextChange("buildingNumber")} maxLength={30} required aria-required="true" aria-invalid={validity.buildingNumber === "invalid" && Boolean(form.buildingNumber.trim())} />
             </Field>
 
             <Field
