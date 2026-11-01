@@ -56,7 +56,7 @@ export function AttendancePage() {
  useEffect(()=>{const id=new URLSearchParams(window.location.search).get("id");if(id)void loadVisit(id);},[loadVisit]);
  useEffect(()=>{if(themeLoaded)try{localStorage.setItem("attendance-dark-mode",String(darkMode));}catch{}},[darkMode,themeLoaded]);
  const counts=useMemo(()=>{const entries=selected?.entries||[];return {present:entries.filter(e=>e.status==="present").length,absent:entries.filter(e=>e.status==="absent").length,moving:entries.filter(e=>e.status==="moving").length,joker:entries.filter(e=>e.status==="joker").length,unmarked:entries.filter(e=>e.status==="unmarked").length};},[selected]);
- const originalNumbers=useMemo(()=>{const ordered=[...(selected?.entries||[])].sort((a,b)=>a.position-b.position);const numbers=new Map<string,number>();let number=0;for(const entry of ordered){if(entry.status!=="joker"){number+=1;numbers.set(entry.id,number);}}return numbers;},[selected]);
+ const originalNumbers=useMemo(()=>new Map((selected?.entries||[]).map(entry=>[entry.id,entry.position+1])),[selected]);
  const filtered=useMemo(()=>{const q=search.trim().toLocaleLowerCase("ar");return (selected?.entries||[]).filter(e=>e.name.toLocaleLowerCase("ar").includes(q)).sort((a,b)=>Number(a.status==="absent")-Number(b.status==="absent")||a.position-b.position);},[selected,search]);
  async function chooseFile(file?:File){
   if(!file)return;
