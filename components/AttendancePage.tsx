@@ -145,7 +145,8 @@ export function AttendancePage() {
     <div className="attendance-roster-head"><button className="attendance-back" onClick={()=>{setSelected(null);setSearch("");setMessage("");router.push("/attendance");}}><ArrowRight size={17}/> كل الكشوف</button><div><span className="attendance-kicker">كشف الزيارة</span><h2>{selected.visit.title}</h2></div></div>
     <div className="attendance-stats">
      <div className="attendance-stat stat-present"><Check size={20}/><span>حضور</span><strong>{counts.present}</strong></div>
-     <div className="attendance-stat stat-absent"><X size={20}/><span>غياب</span><strong>{counts.absent}</strong></div>\n     <div className="attendance-stat stat-excused"><span>⚠️</span><span>اعتذار</span><strong>{counts.excused}</strong></div>
+     <div className="attendance-stat stat-absent"><X size={20}/><span>غياب</span><strong>{counts.absent}</strong></div>
+     <div className="attendance-stat stat-excused"><span>⚠️</span><span>اعتذار</span><strong>{counts.excused}</strong></div>
      <div className="attendance-stat stat-moving"><Navigation size={19}/><span>في الطريق</span><strong>{counts.moving}</strong></div>
      <div className="attendance-stat stat-joker"><Star size={19}/><span>القائد والمشرفين (غير محسوب)</span><strong>{counts.joker}</strong></div>
      <div className="attendance-stat stat-unmarked"><Circle size={19}/><span>لم يُحدد</span><strong>{counts.unmarked}</strong></div>
