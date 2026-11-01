@@ -11,7 +11,7 @@ export async function GET(_request:NextRequest,context:{params:Promise<{id:strin
  try {
   const db=getDb(); await db.execute(sql`ALTER TABLE attendance_entries ADD COLUMN IF NOT EXISTS status_changed_at timestamptz`); const visits=await db.execute(sql`SELECT id,title,created_at AS "createdAt" FROM attendance_visits WHERE id=${id}::uuid LIMIT 1`);
   if(!visits.length) return jsonNoStore({error:"الكشف غير موجود."},{status:404});
-  const entries=await db.execute(sql`SELECT id,full_name AS name,phone_number AS phone,status,position,status_changed_at AS "statusChangedAt" FROM attendance_entries WHERE visit_id=${id}::uuid ORDER BY position,created_at`);
+  const entries=await db.execute(sql`SELECT id,full_name AS name,phone_number AS phone,status,position,is_recently_added AS "isRecentlyAdded",status_changed_at AS "statusChangedAt" FROM attendance_entries WHERE visit_id=${id}::uuid ORDER BY position,created_at`);
   return jsonNoStore({visit:visits[0],entries});
  } catch(error) { console.error("Attendance detail failed",error); return jsonNoStore({error:"تعذّر تحميل الأسماء."},{status:500}); }
 }
@@ -32,12 +32,12 @@ export async function PATCH(request:NextRequest,context:{params:Promise<{id:stri
   let result;
   if(parsed.data.status!==undefined){
    if(parsed.data.status==="present"){
-    result=await getDb().execute(sql`UPDATE attendance_entries SET status='present',status_changed_at=CASE WHEN status='present' AND status_changed_at IS NOT NULL THEN status_changed_at ELSE now() END WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position,status_changed_at AS "statusChangedAt"`);
+    result=await getDb().execute(sql`UPDATE attendance_entries SET status='present',status_changed_at=CASE WHEN status='present' AND status_changed_at IS NOT NULL THEN status_changed_at ELSE now() END WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position,is_recently_added AS "isRecentlyAdded",status_changed_at AS "statusChangedAt"`);
    }else{
-    result=await getDb().execute(sql`UPDATE attendance_entries SET status=${parsed.data.status},status_changed_at=NULL WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position,status_changed_at AS "statusChangedAt"`);
+    result=await getDb().execute(sql`UPDATE attendance_entries SET status=${parsed.data.status},status_changed_at=NULL WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position,is_recently_added AS "isRecentlyAdded",status_changed_at AS "statusChangedAt"`);
    }
   }else{
-   result=await getDb().execute(sql`UPDATE attendance_entries SET full_name=COALESCE(${parsed.data.name?.replace(/\\s+/g," ").trim()??null},full_name),phone_number=COALESCE(${parsed.data.phone??null},phone_number),position=COALESCE(${parsed.data.position??null},position) WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position,status_changed_at AS "statusChangedAt"`);
+   result=await getDb().execute(sql`UPDATE attendance_entries SET full_name=COALESCE(${parsed.data.name?.replace(/\\s+/g," ").trim()??null},full_name),phone_number=COALESCE(${parsed.data.phone??null},phone_number),position=COALESCE(${parsed.data.position??null},position) WHERE id=${parsed.data.entryId}::uuid AND visit_id=${id}::uuid RETURNING id,full_name AS name,phone_number AS phone,status,position,is_recently_added AS "isRecentlyAdded",status_changed_at AS "statusChangedAt"`);
   }
   if(!result.length) return jsonNoStore({error:"الاسم غير موجود في هذا الكشف."},{status:404});
   return jsonNoStore({entry:result[0]});
@@ -49,7 +49,7 @@ export async function POST(request:NextRequest,context:{params:Promise<{id:strin
  const parsed=z.object({name:z.string().trim().min(1).max(180),phone:z.string().trim().max(40).optional()}).safeParse(body);
  if(!parsed.success)return jsonNoStore({error:"اكتب اسمًا صحيحًا."},{status:400});
  try {
-  const result=await getDb().execute(sql`INSERT INTO attendance_entries(visit_id,full_name,phone_number,position) VALUES(${id}::uuid,${parsed.data.name.replace(/\s+/g," ").trim()},${parsed.data.phone??null},COALESCE((SELECT MAX(position)+1 FROM attendance_entries WHERE visit_id=${id}::uuid),0)) RETURNING id,full_name AS name,phone_number AS phone,status,position`);
+  const result=await getDb().execute(sql`INSERT INTO attendance_entries(visit_id,full_name,phone_number,position,is_recently_added) VALUES(${id}::uuid,${parsed.data.name.replace(/\s+/g," ").trim()},${parsed.data.phone??null},COALESCE((SELECT MAX(position)+1 FROM attendance_entries WHERE visit_id=${id}::uuid),0),true) RETURNING id,full_name AS name,phone_number AS phone,status,position,is_recently_added AS "isRecentlyAdded"`);
   if(!result.length)return jsonNoStore({error:"تعذّر إضافة الاسم."},{status:500});
   return jsonNoStore({entry:result[0]},{status:201});
  }catch(error){console.error("Attendance add name failed",error);return jsonNoStore({error:"تعذّر إضافة الاسم. تأكد من وجود الكشف."},{status:500});}

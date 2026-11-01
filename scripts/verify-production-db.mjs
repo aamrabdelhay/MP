@@ -23,7 +23,7 @@ const requiredColumns = {
   ],
   admin_login_attempts: ["ip_hash", "attempts", "window_started_at", "blocked_until"],
   attendance_visits: ["id", "title", "created_at"],
-  attendance_entries: ["id", "visit_id", "full_name", "status", "position", "created_at", "status_changed_at"],
+  attendance_entries: ["id", "visit_id", "full_name", "status", "position", "created_at", "status_changed_at", "is_recently_added"],
 };
 
 const requiredEnums = {
@@ -75,6 +75,13 @@ try {
     enumValues.set(row.type_name, current);
   }
 
+  const statusChecks = await sql`
+    SELECT pg_get_constraintdef(oid) AS definition
+    FROM pg_constraint
+    WHERE conrelid = 'attendance_entries'::regclass AND contype = 'c'
+  `;
+  const hasExcusedStatus = statusChecks.some((row) => String(row.definition).includes("'excused'"));
+
   const missingEnumValues = [];
   for (const [type, expected] of Object.entries(requiredEnums)) {
     for (const value of expected) {
@@ -82,7 +89,11 @@ try {
     }
   }
 
-  if (missingColumns.length || missingEnumValues.length) {
+  if (!hasExcusedStatus) {
+    console.error("[database] attendance_entries status check is missing the excused value.");
+  }
+
+  if (missingColumns.length || missingEnumValues.length || !hasExcusedStatus) {
     if (missingColumns.length) {
       console.error("[database] Missing required columns:", missingColumns.join(", "));
     }

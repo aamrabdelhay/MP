@@ -50,6 +50,13 @@
       "when": 1792777000000,
       "tag": "0006_registration_details",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793550000000,
+      "tag": "0007_excused_and_recently_added",
+      "breakpoints": true
     }
   ]
 }
