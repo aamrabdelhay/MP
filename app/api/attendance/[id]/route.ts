@@ -25,7 +25,7 @@ export async function PATCH(request:NextRequest,context:{params:Promise<{id:stri
    return jsonNoStore({success:true,resetAll:true});
   } catch(error) { console.error("Attendance reset failed",error); return jsonNoStore({error:"تعذّرت إعادة العلامات."},{status:500}); }
  }
- const parsed=z.object({entryId:z.string().uuid(),status:z.enum(["unmarked","present","absent","moving","joker"]).optional(),name:z.string().trim().min(1).max(180).optional(),phone:z.string().trim().max(40).optional(),position:z.number().int().min(0).max(100000).optional()}).refine(v=>v.status!==undefined||v.name!==undefined||v.phone!==undefined||v.position!==undefined).safeParse(body);
+ const parsed=z.object({entryId:z.string().uuid(),status:z.enum(["unmarked","present","absent","excused","moving","joker"]).optional(),name:z.string().trim().min(1).max(180).optional(),phone:z.string().trim().max(40).optional(),position:z.number().int().min(0).max(100000).optional()}).refine(v=>v.status!==undefined||v.name!==undefined||v.phone!==undefined||v.position!==undefined).safeParse(body);
  if(!parsed.success) return jsonNoStore({error:"اختيار الحالة غير صحيح."},{status:400});
  try {
   await getDb().execute(sql`ALTER TABLE attendance_entries ADD COLUMN IF NOT EXISTS status_changed_at timestamptz`);
