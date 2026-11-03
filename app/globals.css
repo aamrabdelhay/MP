@@ -2049,3 +2049,15 @@ textarea:focus-visible {
 /* Recently added attendance entries */
 .attendance-recently-added{display:inline-flex;align-items:center;margin-inline-start:8px;padding:2px 8px;border:1px solid #c8d9ed;border-radius:999px;background:#edf5ff;color:#245b91;font-size:10px;font-weight:800;white-space:nowrap}
 .dark-mode .attendance-recently-added{border-color:#405b7c;background:#233a55;color:#b9d8ff}
+
+
+/* Attendance role categories */
+.attendance-markers{flex-wrap:wrap;justify-content:flex-start}
+.attendance-markers button:nth-child(6).marker-active{background:#7252a3;color:#fff;border-color:#7252a3}
+.attendance-markers button:nth-child(7).marker-active{background:#176b87;color:#fff;border-color:#176b87}
+.attendance-markers button:nth-child(8).marker-active{background:#a16b19;color:#fff;border-color:#a16b19}
+.attendance-markers button:nth-child(9).marker-active{background:#536b3b;color:#fff;border-color:#536b3b}
+.attendance-row.row-captain{background:#fff9e8;border-color:#ead79c}
+.attendance-row.row-supervisor{background:#eef7fb;border-color:#bddce8}
+.attendance-row.row-leader{background:#f5f1e8;border-color:#e1d2ad}
+.attendance-row.row-military{background:#eef3ec;border-color:#cbd9c4}
