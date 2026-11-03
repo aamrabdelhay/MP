@@ -122,7 +122,7 @@ export function AttendancePage() {
   if(selected.visit.id.startsWith("local-")||!navigator.onLine){setMessage("تمت إعادة جميع العلامات محليًا.");return;}
   setBusy(true);try{const response=await fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({resetAll:true})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذرت إعادة العلامات");await loadVisit(selected.visit.id);await refreshVisits();setMessage("تمت إعادة جميع العلامات إلى لم يُحدد.");}catch(error){setSelected(previous);setMessage(error instanceof Error?error.message:"تعذرت إعادة العلامات.");}finally{setBusy(false);}
  }
- async function copyCounts(){if(!selected)return;const text=`الحضور الأساسي (بدون الفئات المستثناة)\n${counts.present}\nإجمالي ركاب الباص (شامل القائد والإشراف والليدرات والعسكري)\n${counts.busTotal}\nالطلاب الحضور + الليدرات\n${counts.presentWithLeaders}\nحضور\n${counts.present}\nغياب\n${counts.absent}\n⚠️ اعتذار\n${counts.excused}\nفي الطريق\n${counts.moving}\nالقائد\n${counts.captain}\nالمشرفين\n${counts.supervisor}\nالليدرات\n${counts.leader}\nعسكري\n${counts.military}\nلم يُحدد\n${counts.unmarked}`;try{await navigator.clipboard.writeText(text);setMessage("تم نسخ إحصائيات الحضور والأعداد فقط.");}catch{setMessage("تعذّر النسخ تلقائيًا. حاول مرة أخرى.");}}
+ async function copyCounts(){if(!selected)return;const text=`الطلاب الحضور: ${counts.present}\nعدد الباص كلها منغير السواق: ${counts.busTotal}\nالطلاب الحضور + الليدرات: ${counts.presentWithLeaders}\nحضور: ${counts.present}\nغياب: ${counts.absent}\n⚠️ اعتذار: ${counts.excused}\nفي الطريق: ${counts.moving}\nالقائد: ${counts.captain}\nالمشرفين: ${counts.supervisor}\nالليدرات: ${counts.leader}\nعسكري: ${counts.military}\nلم يُحدد: ${counts.unmarked}`;try{await navigator.clipboard.writeText(text);setMessage("تم نسخ إحصائيات الحضور والأعداد فقط.");}catch{setMessage("تعذّر النسخ تلقائيًا. حاول مرة أخرى.");}}
  async function deleteVisit(visit:Visit){
   if(!window.confirm(`هل أنت متأكد من حذف كشف "${visit.title}"؟ سيتم حذف جميع الأسماء وحالات الحضور التابعة له نهائيًا.`))return;
   if(visit.id.startsWith("local-")){setVisits(current=>current.filter(item=>item.id!==visit.id));if(selected?.visit.id===visit.id)setSelected(null);setMessage("تم حذف الكشف المحلي.");return;}
@@ -155,17 +155,17 @@ export function AttendancePage() {
    {selected&&<section className="attendance-roster">
     <div className="attendance-roster-head"><button className="attendance-back" onClick={()=>{setSelected(null);setSearch("");setMessage("");router.push("/attendance");}}><ArrowRight size={17}/> كل الكشوف</button><div><span className="attendance-kicker">كشف الزيارة</span><h2>{selected.visit.title}</h2></div></div>
     <div className="attendance-stats" style={{gridTemplateColumns:"repeat(3,minmax(0,1fr))",marginBottom:12}}>
-     <div className="attendance-stat stat-present"><Check size={20}/><span>الحضور الأساسي (بدون الفئات المستثناة)</span><strong>{counts.present}</strong></div>
-     <div className="attendance-stat stat-joker"><Users size={20}/><span>إجمالي ركاب الباص (شامل القائد والإشراف والليدرات والعسكري)</span><strong>{counts.busTotal}</strong></div>
-     <div className="attendance-stat stat-moving"><Flag size={20}/><span>الطلاب الحضور + الليدرات</span><strong>{counts.presentWithLeaders}</strong></div>
+     <div className="attendance-stat stat-present"><Check size={20}/><span>الطلاب الحضور: {counts.present}</span></div>
+     <div className="attendance-stat stat-joker"><Users size={20}/><span>عدد الباص كلها منغير السواق: {counts.busTotal}</span></div>
+     <div className="attendance-stat stat-moving"><Flag size={20}/><span>الطلاب الحضور + الليدرات: {counts.presentWithLeaders}</span></div>
     </div>
     <div className="attendance-stats">
-     <div className="attendance-stat stat-present"><Check size={20}/><span>حضور</span><strong>{counts.present}</strong></div>
-     <div className="attendance-stat stat-absent"><X size={20}/><span>غياب</span><strong>{counts.absent}</strong></div>
-     <div className="attendance-stat stat-excused"><span>⚠️</span><span>اعتذار</span><strong>{counts.excused}</strong></div>
-     <div className="attendance-stat stat-moving"><Navigation size={19}/><span>في الطريق</span><strong>{counts.moving}</strong></div>
-     <div className="attendance-stat stat-joker"><Award size={19}/><span>القائد</span><strong>{counts.captain}</strong></div><div className="attendance-stat stat-joker"><Users size={19}/><span>المشرفين</span><strong>{counts.supervisor}</strong></div><div className="attendance-stat stat-joker"><Flag size={19}/><span>الليدرات</span><strong>{counts.leader}</strong></div><div className="attendance-stat stat-joker"><Shield size={19}/><span>عسكري</span><strong>{counts.military}</strong></div>
-     <div className="attendance-stat stat-unmarked"><Circle size={19}/><span>لم يُحدد</span><strong>{counts.unmarked}</strong></div>
+     <div className="attendance-stat stat-present"><Check size={20}/><span>حضور: {counts.present}</span></div>
+     <div className="attendance-stat stat-absent"><X size={20}/><span>غياب: {counts.absent}</span></div>
+     <div className="attendance-stat stat-excused"><span>⚠️</span><span>اعتذار: {counts.excused}</span></div>
+     <div className="attendance-stat stat-moving"><Navigation size={19}/><span>في الطريق: {counts.moving}</span></div>
+     <div className="attendance-stat stat-joker"><Award size={19}/><span>القائد: {counts.captain}</span></div><div className="attendance-stat stat-joker"><Users size={19}/><span>المشرفين: {counts.supervisor}</span></div><div className="attendance-stat stat-joker"><Flag size={19}/><span>الليدرات: {counts.leader}</span></div><div className="attendance-stat stat-joker"><Shield size={19}/><span>عسكري: {counts.military}</span></div>
+     <div className="attendance-stat stat-unmarked"><Circle size={19}/><span>لم يُحدد: {counts.unmarked}</span></div>
     </div>
     <div className="attendance-tools"><label className="attendance-search"><Search size={18}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="ابحث بالاسم…"/></label><span>{filtered.length} ظاهر · {selected.entries.length-counts.joker-counts.military-counts.captain-counts.supervisor-counts.leader} اسم محسوب من إجمالي الكشف</span><button className="attendance-orange" type="button" onClick={()=>void copyCounts()}><Copy size={16}/> كوبي الحالة</button><button className="attendance-reset" type="button" disabled={busy} onClick={()=>void resetAllStatuses()}><RotateCcw size={16}/> إعادة ضبط العلامات</button></div>
     <form className="attendance-add" onSubmit={e=>{e.preventDefault();void addName();}}><input value={newName} onChange={e=>setNewName(e.target.value)} placeholder="إضافة اسم جديد إلى الكشف" maxLength={180}/><button disabled={busy||!newName.trim()}><UserPlus size={18}/> إضافة اسم</button></form>
