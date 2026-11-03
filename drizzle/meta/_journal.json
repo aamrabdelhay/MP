@@ -57,6 +57,13 @@
       "when": 1793550000000,
       "tag": "0007_excused_and_recently_added",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793696400000,
+      "tag": "0008_attendance_role_categories",
+      "breakpoints": true
     }
   ]
 }
