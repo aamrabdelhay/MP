@@ -94,16 +94,27 @@ export function AttendancePage() {
  }
  async function changeStatus(entry:Entry,status:Entry["status"]){
   if(!selected)return;
-  if(entry.id.startsWith("local-")||!navigator.onLine){setSelected(current=>current?{...current,entries:current.entries.map(e=>e.id===entry.id?{...e,status,statusChangedAt:status==="present"?new Date().toISOString():null}:e)}:current);setMessage("تم حفظ الحالة على هذا الجهاز.");return;}
+  const visitId=selected.visit.id;
+  const previousStatus=entry.status;
+  const optimisticEntry={...entry,status,statusChangedAt:status==="present"?(entry.status==="present"&&entry.statusChangedAt?entry.statusChangedAt:new Date().toISOString()):null};
+  // Update the visible row immediately so a tap always has visible feedback.
+  setSelected(current=>current?{...current,entries:current.entries.map(e=>e.id===entry.id?optimisticEntry:e)}:current);
+  if(visitId.startsWith("local-")||!navigator.onLine){
+   setMessage("تم حفظ الحالة على هذا الجهاز.");
+   return;
+  }
   try{
-   const response=await fetch("/api/attendance/"+selected.visit.id,{method:"PATCH",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:entry.id,status})});
+   const response=await fetch("/api/attendance/"+visitId,{method:"PATCH",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({entryId:entry.id,status})});
    const data=await response.json();
    if(!response.ok)throw new Error(data.error||"تعذّر حفظ الحالة");
    if(!data.entry)throw new Error("لم يصل تأكيد حفظ الحالة من الخادم.");
    setSelected(current=>current?{...current,entries:current.entries.map(e=>e.id===entry.id?{...e,...data.entry}:e)}:current);
    setMessage("تم حفظ الحالة بنجاح.");
    await refreshVisits();
-  }catch(error){setMessage(error instanceof Error?error.message:"تعذّر حفظ الحالة. حاول مرة أخرى.");}
+  }catch(error){
+   setSelected(current=>current?{...current,entries:current.entries.map(e=>e.id===entry.id?{...e,status:previousStatus,statusChangedAt:entry.statusChangedAt??null}:e)}:current);
+   setMessage(error instanceof Error?error.message:"تعذّر حفظ الحالة. حاول مرة أخرى.");
+  }
  }
  async function resetAllStatuses(){
   if(!selected||!window.confirm("هل تريد إعادة جميع العلامات في هذا الكشف إلى «لم يُحدد»؟"))return;
