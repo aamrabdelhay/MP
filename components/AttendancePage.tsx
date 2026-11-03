@@ -55,7 +55,7 @@ export function AttendancePage() {
  useEffect(()=>{void refreshVisits();},[refreshVisits]);
  useEffect(()=>{const id=new URLSearchParams(window.location.search).get("id");if(id)void loadVisit(id);},[loadVisit]);
  useEffect(()=>{if(themeLoaded)try{localStorage.setItem("attendance-dark-mode",String(darkMode));}catch{}},[darkMode,themeLoaded]);
- const counts=useMemo(()=>{const entries=selected?.entries||[];return {present:entries.filter(e=>e.status==="present").length,absent:entries.filter(e=>e.status==="absent").length,excused:entries.filter(e=>e.status==="excused").length,moving:entries.filter(e=>e.status==="moving").length,joker:entries.filter(e=>e.status==="joker").length,military:entries.filter(e=>e.status==="military").length,captain:entries.filter(e=>e.status==="captain").length,supervisor:entries.filter(e=>e.status==="supervisor").length,leader:entries.filter(e=>e.status==="leader").length,unmarked:entries.filter(e=>e.status==="unmarked").length};},[selected]);
+ const counts=useMemo(()=>{const entries=selected?.entries||[];const present=entries.filter(e=>e.status==="present").length;const specialOnBus=entries.filter(e=>["captain","supervisor","leader","military","joker"].includes(e.status)).length;return {present,busTotal:present+specialOnBus,absent:entries.filter(e=>e.status==="absent").length,excused:entries.filter(e=>e.status==="excused").length,moving:entries.filter(e=>e.status==="moving").length,joker:entries.filter(e=>e.status==="joker").length,military:entries.filter(e=>e.status==="military").length,captain:entries.filter(e=>e.status==="captain").length,supervisor:entries.filter(e=>e.status==="supervisor").length,leader:entries.filter(e=>e.status==="leader").length,unmarked:entries.filter(e=>e.status==="unmarked").length};},[selected]);
  const originalNumbers=useMemo(()=>new Map((selected?.entries||[]).map(entry=>[entry.id,entry.position+1])),[selected]);
  const filtered=useMemo(()=>{const q=search.trim().toLocaleLowerCase("ar");const priority=(entry:Entry)=>{const roleOrder:Partial<Record<Entry["status"],number>>={captain:0,supervisor:1,leader:2,military:3,joker:2};if(roleOrder[entry.status]!==undefined)return roleOrder[entry.status]!;if(entry.isRecentlyAdded)return 5;return entry.status==="absent"?6:entry.status==="excused"?7:4;};return (selected?.entries||[]).filter(e=>e.name.toLocaleLowerCase("ar").includes(q)).sort((a,b)=>priority(a)-priority(b)||a.position-b.position);},[selected,search]);
  async function chooseFile(file?:File){
@@ -154,6 +154,10 @@ export function AttendancePage() {
    </section>}
    {selected&&<section className="attendance-roster">
     <div className="attendance-roster-head"><button className="attendance-back" onClick={()=>{setSelected(null);setSearch("");setMessage("");router.push("/attendance");}}><ArrowRight size={17}/> كل الكشوف</button><div><span className="attendance-kicker">كشف الزيارة</span><h2>{selected.visit.title}</h2></div></div>
+    <div className="attendance-stats" style={{gridTemplateColumns:"repeat(2,minmax(0,1fr))",marginBottom:12}}>
+     <div className="attendance-stat stat-present"><Check size={20}/><span>الحضور الأساسي (بدون الفئات المستثناة)</span><strong>{counts.present}</strong></div>
+     <div className="attendance-stat stat-joker"><Users size={20}/><span>إجمالي ركاب الباص (شامل القائد والإشراف والليدرات والعسكري)</span><strong>{counts.busTotal}</strong></div>
+    </div>
     <div className="attendance-stats">
      <div className="attendance-stat stat-present"><Check size={20}/><span>حضور</span><strong>{counts.present}</strong></div>
      <div className="attendance-stat stat-absent"><X size={20}/><span>غياب</span><strong>{counts.absent}</strong></div>
