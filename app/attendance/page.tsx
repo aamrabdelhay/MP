@@ -1,4 +1,6 @@
+import { notFound } from "next/navigation";
 import { AttendancePage } from "@/components/AttendancePage";
+import { SITE_MODE } from "@/lib/site-mode";
 
 export const metadata = {
   title: "كشف الحضور | جامعة العاصمة",
@@ -7,5 +9,6 @@ export const metadata = {
 };
 
 export default function Page() {
+  if (SITE_MODE === "cookies") notFound();
   return <AttendancePage />;
 }

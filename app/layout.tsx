@@ -7,20 +7,22 @@ import "@fontsource/cairo/800.css";
 import "./globals.css";
 import { Providers } from "@/app/providers";
 import { Footer } from "@/components/Footer";
+import { SITE_MODE } from "@/lib/site-mode";
+
+const isCookieMode = SITE_MODE === "cookies";
 
 export const metadata: Metadata = {
-  title: "جامعة العاصمة | Capital University",
-  description: "بوابة التسجيل الإلكتروني لجامعة العاصمة — Capital University online registration portal.",
-  applicationName: "كشف الحضور - جامعة العاصمة",
+  title: isCookieMode ? "COOKIE CLUB | كوكيز على مزاجك" : "جامعة العاصمة | Capital University",
+  description: isCookieMode
+    ? "كوكيز طازج، شوكولاتة غنية، ومولتن كيك."
+    : "بوابة التسجيل الإلكتروني لجامعة العاصمة — Capital University online registration portal.",
+  applicationName: isCookieMode ? "COOKIE CLUB" : "كشف الحضور - جامعة العاصمة",
   manifest: "/manifest.webmanifest",
-  robots: {
-    index: false,
-    follow: false,
-  },
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F3563",
+  themeColor: isCookieMode ? "#6b4437" : "#0F3563",
   width: "device-width",
   initialScale: 1,
 };

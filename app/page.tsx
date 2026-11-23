@@ -5,10 +5,14 @@ import { ClipboardCheck, UserRoundPlus, GraduationCap } from "lucide-react";
 import { UniversityMark } from "@/components/UniversityMark";
 import { useLanguage } from "@/app/providers";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { CookieShop } from "@/components/CookieShop";
+import { SITE_MODE } from "@/lib/site-mode";
 
 export default function Page() {
   const { language } = useLanguage();
   const ar = language === "ar";
+  if (SITE_MODE === "cookies") return <CookieShop />;
+
   return (
     <main className="site-main">
       <div className="page-width">

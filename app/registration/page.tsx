@@ -1,4 +1,6 @@
+import { notFound } from "next/navigation";
 import { HomePage } from "@/components/HomePage";
+import { SITE_MODE } from "@/lib/site-mode";
 
 export const metadata = {
   title: "فورم التسجيل | جامعة العاصمة",
@@ -7,5 +9,6 @@ export const metadata = {
 };
 
 export default function RegistrationPage() {
+  if (SITE_MODE === "cookies") notFound();
   return <HomePage />;
 }
