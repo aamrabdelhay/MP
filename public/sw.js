@@ -1,5 +1,5 @@
-const CACHE_NAME = "capital-attendance-shell-v3";
-const APP_SHELL = ["/", "/attendance", "/manifest.webmanifest"];
+const CACHE_NAME = "capital-attendance-shell-v4";
+const APP_SHELL = ["/", "/attendance", "/manifest.webmanifest", "/book-icon.svg"];
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });

@@ -4,10 +4,17 @@
   "description": "إدارة كشوف الزيارات العسكرية",
   "lang": "ar",
   "dir": "rtl",
-  "start_url": "/",
+  "start_url": "/attendance",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f7f7f7",
   "theme_color": "#0f3563",
-  "icons": []
+  "icons": [
+    {
+      "src": "/book-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
 }

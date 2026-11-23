@@ -5,10 +5,11 @@ import { getDb } from "@/lib/db";
 import { jsonNoStore } from "@/lib/http";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const createSchema = z.object({ title: z.string().trim().min(1).max(180), names: z.array(z.union([z.string().trim().min(1).max(180),z.object({name:z.string().trim().min(1).max(180),phone:z.string().trim().max(40).optional()})])).min(1).max(2000), originalFile: z.object({name:z.string().trim().min(1).max(255),type:z.string().max(160),data:z.string().max(4_200_000).regex(/^[A-Za-z0-9+/]*={0,2}$/)}).optional() });
+const createSchema = z.object({ title: z.string().trim().min(1).max(180), locationMapUrl: z.string().trim().max(2000).optional().refine(value => !value || (() => { try { const url = new URL(value); return url.protocol === "https:" && (url.hostname === "maps.app.goo.gl" || url.hostname === "goo.gl" || url.hostname === "google.com" || url.hostname.endsWith(".google.com")); } catch { return false; } })(), "رابط Google Maps غير صالح."), names: z.array(z.union([z.string().trim().min(1).max(180),z.object({name:z.string().trim().min(1).max(180),phone:z.string().trim().max(40).optional()})])).min(1).max(2000), originalFile: z.object({name:z.string().trim().min(1).max(255),type:z.string().max(160),data:z.string().max(4_200_000).regex(/^[A-Za-z0-9+/]*={0,2}$/)}).optional() });
 export async function GET() {
  try {
-  const result = await getDb().execute(sql`SELECT v.id,v.title,v.created_at AS "createdAt",COUNT(e.id) FILTER (WHERE e.status <> 'joker')::int AS total,COUNT(e.id) FILTER (WHERE e.status='present')::int AS present,COUNT(e.id) FILTER (WHERE e.status='absent')::int AS absent,COUNT(e.id) FILTER (WHERE e.status='excused')::int AS excused,COUNT(e.id) FILTER (WHERE e.status='unmarked')::int AS unmarked,COUNT(e.id) FILTER (WHERE e.status='moving')::int AS moving,COUNT(e.id) FILTER (WHERE e.status='joker')::int AS joker FROM attendance_visits v LEFT JOIN attendance_entries e ON e.visit_id=v.id GROUP BY v.id ORDER BY v.created_at DESC`);
+  await getDb().execute(sql`ALTER TABLE attendance_visits ADD COLUMN IF NOT EXISTS location_map_url text`);
+  const result = await getDb().execute(sql`SELECT v.id,v.title,v.location_map_url AS "locationMapUrl",v.created_at AS "createdAt",COUNT(e.id) FILTER (WHERE e.status <> 'joker')::int AS total,COUNT(e.id) FILTER (WHERE e.status='present')::int AS present,COUNT(e.id) FILTER (WHERE e.status='absent')::int AS absent,COUNT(e.id) FILTER (WHERE e.status='excused')::int AS excused,COUNT(e.id) FILTER (WHERE e.status='unmarked')::int AS unmarked,COUNT(e.id) FILTER (WHERE e.status='moving')::int AS moving,COUNT(e.id) FILTER (WHERE e.status='joker')::int AS joker FROM attendance_visits v LEFT JOIN attendance_entries e ON e.visit_id=v.id GROUP BY v.id ORDER BY v.created_at DESC`);
   return jsonNoStore({visits:result});
  } catch(error) { console.error("Attendance list failed",error); return jsonNoStore({error:"تعذّر تحميل كشوف الحضور. تأكد من إعداد قاعدة البيانات."},{status:500}); }
 }
@@ -21,9 +22,9 @@ export async function POST(request:NextRequest) {
  if(!names.length) return jsonNoStore({error:"لم يتم العثور على أسماء في الملف."},{status:400});
  try {
   const db=getDb();
-  await db.execute(sql`ALTER TABLE attendance_visits ADD COLUMN IF NOT EXISTS original_file_name varchar(255), ADD COLUMN IF NOT EXISTS original_file_type varchar(160), ADD COLUMN IF NOT EXISTS original_file_data text`);
+  await db.execute(sql`ALTER TABLE attendance_visits ADD COLUMN IF NOT EXISTS original_file_name varchar(255), ADD COLUMN IF NOT EXISTS original_file_type varchar(160), ADD COLUMN IF NOT EXISTS original_file_data text, ADD COLUMN IF NOT EXISTS location_map_url text`);
   const originalFile=parsed.data.originalFile;
-  const result=await db.execute(sql`INSERT INTO attendance_visits(title,original_file_name,original_file_type,original_file_data) VALUES(${parsed.data.title},${originalFile?.name??null},${originalFile?.type??null},${originalFile?.data??null}) RETURNING id,title`);
+  const result=await db.execute(sql`INSERT INTO attendance_visits(title,original_file_name,original_file_type,original_file_data,location_map_url) VALUES(${parsed.data.title},${originalFile?.name??null},${originalFile?.type??null},${originalFile?.data??null},${parsed.data.locationMapUrl||null}) RETURNING id,title`);
   const visit=result[0] as {id:string;title:string}|undefined; if(!visit) throw new Error("Could not create visit");
   for(let i=0;i<names.length;i++) await db.execute(sql`INSERT INTO attendance_entries(visit_id,full_name,phone_number,position) VALUES(${visit.id}::uuid,${names[i].name},${names[i].phone||null},${i})`);
   return jsonNoStore({visit},{status:201});
