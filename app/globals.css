@@ -2068,3 +2068,17 @@ textarea:focus-visible {
 .attendance-source-file:hover{background:#ffefd9}
 .dark-mode .attendance-source-file{background:#30271f;border-color:#78552e;color:#ffc889}
 @media(max-width:560px){.attendance-source-file{width:100%}}
+
+/* Optional Google Maps location card at the bottom of each attendance roster */
+.attendance-location-card{display:flex;align-items:center;gap:14px;margin-top:22px;padding:18px;border:1px solid #c8d9ea;border-radius:16px;background:linear-gradient(135deg,#f4f9ff,#fff);color:#173b63;text-decoration:none;box-shadow:0 7px 22px #173b6310;min-height:88px}
+.attendance-location-card:hover{border-color:#7ca6d0;box-shadow:0 9px 26px #173b6318}
+.attendance-location-icon{display:grid;place-items:center;flex:0 0 48px;height:48px;border-radius:13px;background:#e4effb;color:#1764a2}
+.attendance-location-card>span:nth-child(2){display:grid;gap:5px;flex:1;min-width:0}
+.attendance-location-card strong{font-size:16px}
+.attendance-location-card small{font-size:12px;color:#65788d}
+.attendance-location-action{padding:9px 13px;border-radius:9px;background:#0f5c98;color:#fff;font-size:12px;font-weight:800;white-space:nowrap}
+.dark-mode .attendance-location-card{background:#1c3045;border-color:#3b5875;color:#e4effb;box-shadow:none}
+.dark-mode .attendance-location-icon{background:#254765;color:#a8d4ff}
+.dark-mode .attendance-location-card small{color:#afc1d4}
+.dark-mode .attendance-location-action{background:#236da7;color:#fff}
+@media(max-width:560px){.attendance-location-card{gap:10px;padding:13px}.attendance-location-icon{flex-basis:42px;height:42px}.attendance-location-card strong{font-size:14px}.attendance-location-card small{font-size:11px}.attendance-location-action{padding:8px 9px;font-size:11px}}
