@@ -2061,3 +2061,10 @@ textarea:focus-visible {
 .attendance-row.row-supervisor{background:#eef7fb;border-color:#bddce8}
 .attendance-row.row-leader{background:#f5f1e8;border-color:#e1d2ad}
 .attendance-row.row-military{background:#eef3ec;border-color:#cbd9c4}
+
+
+/* Link to the untouched source attendance spreadsheet */
+.attendance-source-file{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #e5a15e;border-radius:10px;padding:10px 13px;background:#fff8ef;color:#995315;text-decoration:none;font:inherit;font-size:13px;font-weight:800;white-space:nowrap}
+.attendance-source-file:hover{background:#ffefd9}
+.dark-mode .attendance-source-file{background:#30271f;border-color:#78552e;color:#ffc889}
+@media(max-width:560px){.attendance-source-file{width:100%}}
