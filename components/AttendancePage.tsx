@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowRight, ArrowUp, Award, Check, Circle, Copy, FileSpreadsheet, Flag, Moon, Navigation, Pencil, Phone, RotateCcw, Search, Shield, Star, Sun, Trash2, UserPlus, Users, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
-type Visit = { id: string; title: string; total: number; present: number; absent: number; excused: number; moving: number; joker: number; military: number; captain: number; supervisor: number; leader: number; unmarked: number; createdAt?: string };
+type Visit = { id: string; title: string; originalFileName?: string | null; total: number; present: number; absent: number; excused: number; moving: number; joker: number; military: number; captain: number; supervisor: number; leader: number; unmarked: number; createdAt?: string };
 type Entry = { id: string; name: string; phone?: string | null; status: "present" | "absent" | "excused" | "moving" | "joker" | "military" | "captain" | "supervisor" | "leader" | "unmarked"; position: number; isRecentlyAdded?: boolean; statusChangedAt?: string | Date | null };
 type Detail = { visit: Visit; entries: Entry[] };
 
@@ -29,6 +29,7 @@ export function AttendancePage() {
  const [newName,setNewName]=useState("");
  const [names,setNames]=useState<Array<{name:string;phone:string}>>([]);
  const [fileName,setFileName]=useState("");
+ const [sourceFile,setSourceFile]=useState<File|null>(null);
  const [isOnline,setIsOnline]=useState(true);
  const [darkMode,setDarkMode]=useState(false);
  const [themeLoaded,setThemeLoaded]=useState(false);
@@ -80,16 +81,17 @@ export function AttendancePage() {
    const parsed=rows.slice(start).map(row=>({name:String(row[column]??"").replace(/\s+/g," ").trim(),phone:phoneIndex>=0?normalizePhoneNumber(row[phoneIndex]):""})).filter(entry=>entry.name);
    if(!parsed.length)throw new Error("لم أجد أسماء في العمود الأول. تأكد أن الأسماء في عمود واحد.");
    const unique=[...new Map(parsed.map(entry=>[entry.name.toLocaleLowerCase("ar"),entry])).values()];
-   setNames(unique);setFileName(file.name);
+   setNames(unique);setFileName(file.name);setSourceFile(file);
    if(!title.trim())setTitle(file.name.replace(/\.(xlsx|xls|csv)$/i,"").replace(/[_-]+/g," ").trim());
    setMessage("");
   }catch(error){setMessage(error instanceof Error?error.message:"تعذّر قراءة الملف");}
  }
  async function createVisit(){
   if(!title.trim()||!names.length){setMessage("اكتب اسم الزيارة وارفع ملف Excel يحتوي على الأسماء.");return;}
+  if(sourceFile&&sourceFile.size>3*1024*1024){setMessage("حجم الملف الأصلي أكبر من 3 ميجابايت. اختر نسخة أصغر حتى يمكن حفظها وفتحها لاحقًا.");return;}
   setBusy(true);setMessage("");
-  try{const response=await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:title.trim(),names})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر إنشاء الكشف");setTitle("");setNames([]);setFileName("");await refreshVisits();router.push("/attendance?id="+data.visit.id);await loadVisit(data.visit.id);}
-  catch(error){if(!navigator.onLine||error instanceof TypeError){const id="local-"+crypto.randomUUID();const visit={id,title:title.trim(),total:names.length,present:0,absent:0,excused:0,moving:0,joker:0,military:0,captain:0,supervisor:0,leader:0,unmarked:names.length,createdAt:new Date().toISOString()};const detail={visit,entries:names.map((entry,index)=>({id:"local-"+crypto.randomUUID(),name:entry.name,phone:entry.phone,status:"unmarked" as const,position:index}))};setVisits(current=>[visit,...current]);setSelected(detail);setTitle("");setNames([]);setFileName("");router.push("/attendance?id="+id);setMessage("تم إنشاء الكشف محليًا دون اتصال. هذا الكشف محفوظ على هذا الجهاز فقط.");}else{const text=error instanceof Error?error.message:"حدث خطأ";setMessage(text);}}
+  try{let originalFile: {name:string;type:string;data:string}|undefined;if(sourceFile){const bytes=new Uint8Array(await sourceFile.arrayBuffer());let binary="";for(let i=0;i<bytes.length;i+=0x8000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x8000));originalFile={name:sourceFile.name,type:sourceFile.type||"application/octet-stream",data:btoa(binary)};}const response=await fetch("/api/attendance",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({title:title.trim(),names,originalFile})});const data=await response.json();if(!response.ok)throw new Error(data.error||"تعذّر إنشاء الكشف");setTitle("");setNames([]);setFileName("");setSourceFile(null);await refreshVisits();router.push("/attendance?id="+data.visit.id);await loadVisit(data.visit.id);}
+  catch(error){if(!navigator.onLine||error instanceof TypeError){const id="local-"+crypto.randomUUID();const visit={id,title:title.trim(),total:names.length,present:0,absent:0,excused:0,moving:0,joker:0,military:0,captain:0,supervisor:0,leader:0,unmarked:names.length,createdAt:new Date().toISOString()};const detail={visit,entries:names.map((entry,index)=>({id:"local-"+crypto.randomUUID(),name:entry.name,phone:entry.phone,status:"unmarked" as const,position:index}))};setVisits(current=>[visit,...current]);setSelected(detail);setTitle("");setNames([]);setFileName("");setSourceFile(null);router.push("/attendance?id="+id);setMessage("تم إنشاء الكشف محليًا دون اتصال. هذا الكشف محفوظ على هذا الجهاز فقط.");}else{const text=error instanceof Error?error.message:"حدث خطأ";setMessage(text);}}
   finally{setBusy(false);}
  }
  async function changeStatus(entry:Entry,status:Entry["status"]){
@@ -153,7 +155,7 @@ export function AttendancePage() {
     <button className="attendance-orange" disabled={busy||!names.length||!title.trim()} onClick={()=>void createVisit()}>{busy?"جارٍ الحفظ…":"إنشاء كشف الحضور"}</button>
    </section>}
    {selected&&<section className="attendance-roster">
-    <div className="attendance-roster-head"><button className="attendance-back" onClick={()=>{setSelected(null);setSearch("");setMessage("");router.push("/attendance");}}><ArrowRight size={17}/> كل الكشوف</button><div><span className="attendance-kicker">كشف الزيارة</span><h2>{selected.visit.title}</h2></div></div>
+    <div className="attendance-roster-head"><button className="attendance-back" onClick={()=>{setSelected(null);setSearch("");setMessage("");router.push("/attendance");}}><ArrowRight size={17}/> كل الكشوف</button><div><span className="attendance-kicker">كشف الزيارة</span><h2>{selected.visit.title}</h2></div>{selected.visit.originalFileName&&<a className="attendance-source-file" href={"/api/attendance/"+selected.visit.id+"/original"} target="_blank" rel="noopener noreferrer"><FileSpreadsheet size={17}/> اطّلاع على أصل الكشف</a>}</div>
     <div className="attendance-stats" style={{gridTemplateColumns:"repeat(3,minmax(0,1fr))",marginBottom:12}}>
      <div className="attendance-stat stat-present"><Check size={20}/><span>الطلاب الحضور: {counts.present}</span></div>
      <div className="attendance-stat stat-joker"><Users size={20}/><span>عدد الباص كلها منغير السواق: {counts.busTotal}</span></div>
