@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 import { jsonNoStore } from "@/lib/http";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const createSchema = z.object({ title: z.string().trim().min(1).max(180), names: z.array(z.union([z.string().trim().min(1).max(180),z.object({name:z.string().trim().min(1).max(180),phone:z.string().trim().max(40).optional()})])).min(1).max(2000), originalFile: z.object({name:z.string().trim().min(1).max(255),type:z.string().max(160),data:z.string().max(4_000_000).regex(/^[A-Za-z0-9+/]*={0,2}$/)}).optional() });
+const createSchema = z.object({ title: z.string().trim().min(1).max(180), names: z.array(z.union([z.string().trim().min(1).max(180),z.object({name:z.string().trim().min(1).max(180),phone:z.string().trim().max(40).optional()})])).min(1).max(2000), originalFile: z.object({name:z.string().trim().min(1).max(255),type:z.string().max(160),data:z.string().max(4_200_000).regex(/^[A-Za-z0-9+/]*={0,2}$/)}).optional() });
 export async function GET() {
  try {
   const result = await getDb().execute(sql`SELECT v.id,v.title,v.created_at AS "createdAt",COUNT(e.id) FILTER (WHERE e.status <> 'joker')::int AS total,COUNT(e.id) FILTER (WHERE e.status='present')::int AS present,COUNT(e.id) FILTER (WHERE e.status='absent')::int AS absent,COUNT(e.id) FILTER (WHERE e.status='excused')::int AS excused,COUNT(e.id) FILTER (WHERE e.status='unmarked')::int AS unmarked,COUNT(e.id) FILTER (WHERE e.status='moving')::int AS moving,COUNT(e.id) FILTER (WHERE e.status='joker')::int AS joker FROM attendance_visits v LEFT JOIN attendance_entries e ON e.visit_id=v.id GROUP BY v.id ORDER BY v.created_at DESC`);
