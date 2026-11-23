@@ -5,7 +5,7 @@ import { getDb } from "@/lib/db";
 import { jsonNoStore } from "@/lib/http";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-const createSchema = z.object({ title: z.string().trim().min(1).max(180), names: z.array(z.union([z.string().trim().min(1).max(180),z.object({name:z.string().trim().min(1).max(180),phone:z.string().trim().max(40).optional()})])).min(1).max(2000) });
+const createSchema = z.object({ title: z.string().trim().min(1).max(180), names: z.array(z.union([z.string().trim().min(1).max(180),z.object({name:z.string().trim().min(1).max(180),phone:z.string().trim().max(40).optional()})])).min(1).max(2000), originalFile: z.object({name:z.string().trim().min(1).max(255),type:z.string().max(160),data:z.string().max(4_000_000).regex(/^[A-Za-z0-9+/]*={0,2}$/)}).optional() });
 export async function GET() {
  try {
   const result = await getDb().execute(sql`SELECT v.id,v.title,v.created_at AS "createdAt",COUNT(e.id) FILTER (WHERE e.status <> 'joker')::int AS total,COUNT(e.id) FILTER (WHERE e.status='present')::int AS present,COUNT(e.id) FILTER (WHERE e.status='absent')::int AS absent,COUNT(e.id) FILTER (WHERE e.status='excused')::int AS excused,COUNT(e.id) FILTER (WHERE e.status='unmarked')::int AS unmarked,COUNT(e.id) FILTER (WHERE e.status='moving')::int AS moving,COUNT(e.id) FILTER (WHERE e.status='joker')::int AS joker FROM attendance_visits v LEFT JOIN attendance_entries e ON e.visit_id=v.id GROUP BY v.id ORDER BY v.created_at DESC`);
@@ -20,7 +20,10 @@ export async function POST(request:NextRequest) {
  const names=[...new Map(normalized.map(entry=>[entry.name.toLocaleLowerCase("ar"),entry])).values()];
  if(!names.length) return jsonNoStore({error:"لم يتم العثور على أسماء في الملف."},{status:400});
  try {
-  const db=getDb(); const result=await db.execute(sql`INSERT INTO attendance_visits(title) VALUES(${parsed.data.title}) RETURNING id,title`);
+  const db=getDb();
+  await db.execute(sql`ALTER TABLE attendance_visits ADD COLUMN IF NOT EXISTS original_file_name varchar(255), ADD COLUMN IF NOT EXISTS original_file_type varchar(160), ADD COLUMN IF NOT EXISTS original_file_data text`);
+  const originalFile=parsed.data.originalFile;
+  const result=await db.execute(sql`INSERT INTO attendance_visits(title,original_file_name,original_file_type,original_file_data) VALUES(${parsed.data.title},${originalFile?.name??null},${originalFile?.type??null},${originalFile?.data??null}) RETURNING id,title`);
   const visit=result[0] as {id:string;title:string}|undefined; if(!visit) throw new Error("Could not create visit");
   for(let i=0;i<names.length;i++) await db.execute(sql`INSERT INTO attendance_entries(visit_id,full_name,phone_number,position) VALUES(${visit.id}::uuid,${names[i].name},${names[i].phone||null},${i})`);
   return jsonNoStore({visit},{status:201});
